@@ -469,6 +469,7 @@ export default function Navbar({ onOpenEmergency, onNavigate, onOpenNotification
                 </div>
                 <div
                   onClick={() => {
+                    sessionStorage.setItem('femtech_just_logged_out', 'true');
                     logout();
                     setShowProfileMenu(false);
                   }}

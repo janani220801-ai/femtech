@@ -325,6 +325,65 @@ export default function Sidebar({ currentTab, onNavigate }) {
           );
         })}
       </div>
+
+      {/* Sidebar Footer with User Details & Logout Button */}
+      <div style={{
+        marginTop: 'auto',
+        paddingTop: '14px',
+        borderTop: '1.5px solid #fee2e8',
+        display: 'flex',
+        flexDirection: 'column',
+        gap: '8px'
+      }}>
+        {user && (
+          <div style={{
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            padding: '8px 12px',
+            background: 'rgba(255, 241, 242, 0.75)',
+            borderRadius: '12px',
+            border: '1px solid #fecdd3'
+          }}>
+            <div style={{ minWidth: 0 }}>
+              <div style={{ fontSize: '0.82rem', fontWeight: 800, color: '#881337', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                {user.name || 'User'}
+              </div>
+              <div style={{ fontSize: '0.7rem', color: '#be123c', fontWeight: 600 }}>
+                {user.bloodGroup ? `🩸 ${user.bloodGroup}` : ''} {user.age ? `• ${user.age} yrs` : ''}
+              </div>
+            </div>
+          </div>
+        )}
+
+        <button
+          type="button"
+          onClick={() => {
+            sessionStorage.setItem('femtech_just_logged_out', 'true');
+            logout();
+          }}
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            gap: '8px',
+            width: '100%',
+            padding: '10px 14px',
+            borderRadius: '12px',
+            border: '1.5px solid #fecdd3',
+            background: '#fff1f2',
+            color: '#be123c',
+            fontWeight: 800,
+            fontSize: '0.84rem',
+            cursor: 'pointer',
+            transition: 'all 0.15s ease'
+          }}
+          title={language === 'ta' ? 'கணக்கிலிருந்து வெளியேறு' : 'Log out of account'}
+        >
+          <LogOut size={16} />
+          <span>{language === 'ta' ? 'வெளியேறு (Logout)' : 'Log Out'}</span>
+        </button>
+      </div>
     </aside>
   );
 }
