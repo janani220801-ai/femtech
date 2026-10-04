@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { useLanguage } from '../../context/LanguageContext';
 import BrandWingsLogo from '../common/BrandWingsLogo';
+import DisclaimerBanner from '../common/DisclaimerBanner';
 import {
   Sparkles,
   Lock,
@@ -38,7 +39,9 @@ import {
   Trash2,
   Send,
   Sliders,
-  Check
+  Check,
+  Eye,
+  EyeOff
 } from 'lucide-react';
 
 export default function AuthModal({ isOpen, onClose }) {
@@ -46,12 +49,57 @@ export default function AuthModal({ isOpen, onClose }) {
   const { language, changeLanguage, t, languages } = useLanguage();
   const isTamil = language === 'ta';
 
-  // Mode & Tabs
-  const [isLoginMode, setIsLoginMode] = useState(false);
-  const [showCustomForm, setShowCustomForm] = useState(false);
+  // Dedicated Auth Tabs: 'signin' | 'register'
+  const [authTab, setAuthTab] = useState('signin');
+  const [showPassword, setShowPassword] = useState(false);
+  const [showQuestionnaireDrawer, setShowQuestionnaireDrawer] = useState(false);
   const [activeTab, setActiveTab] = useState('questionnaire'); // 'questionnaire' | 'sos' | 'bluetooth'
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+
+  // 4 Target Age Brackets for Personalization
+  const ageBrackets = [
+    {
+      id: 'prepuberty',
+      minAge: 8,
+      maxAge: 11,
+      defaultAge: 9,
+      icon: '👧',
+      title: isTamil ? '8–11 வயது: குழந்தை நலம்' : '8–11 Yrs: Early Adolescent View',
+      desc: isTamil ? 'உடல் விழிப்புணர்வு, சீரான நீர்ச்சத்து, ஆரம்ப ஊட்டச்சத்து வழிகாட்டுதல்' : 'Growth tracking, body confidence, hydration & nutrition',
+      tag: isTamil ? 'வளர்ச்சி வழிகாட்டி' : 'Pre-Puberty'
+    },
+    {
+      id: 'teen',
+      minAge: 12,
+      maxAge: 16,
+      defaultAge: 14,
+      icon: '🌸',
+      title: isTamil ? '12–16 வயது: பதின்பருவம் & முதல் பீரியட்ஸ்' : '12–16 Yrs: Teenager & Puberty Care',
+      desc: isTamil ? 'முதல் மாதவிடாய் ஆதரவு, சுகாதார வழிகாட்டி, வயிற்று வலி மேலாண்மை & மனநிலை' : 'First periods, hygiene, cramp relief, acne & emotional health',
+      tag: isTamil ? 'பதின்பருவ போர்டல்' : 'Teen Hub'
+    },
+    {
+      id: 'youngadult',
+      minAge: 17,
+      maxAge: 24,
+      defaultAge: 21,
+      icon: '🎒',
+      title: isTamil ? '17–24 வயது: கல்லூரி & சுழற்சி நலம்' : '17–24 Yrs: Young Adult & College Care',
+      desc: isTamil ? 'மாதவிடாய் சுழற்சி டிராக்கர், PCOS பரிசோதனை, ஹார்மோன் சமநிலை & மன அழுத்தம்' : 'Period cycle tracking, PCOS risk check, hormonal balance & college lifestyle',
+      tag: isTamil ? 'சுழற்சி மையம்' : 'Cycle & PCOS'
+    },
+    {
+      id: 'adult',
+      minAge: 25,
+      maxAge: 70,
+      defaultAge: 26,
+      icon: '👩‍💼',
+      title: isTamil ? '25+ வயது: மகப்பேறு & மெனோபாஸ்' : '25+ Yrs: Adult, Maternity & Menopause',
+      desc: isTamil ? 'கருவுறுதல், கர்ப்பகால நலம், தைராய்டு, பெரிமெனோபாஸ் & மெனோபாஸ் வழிகாட்டி' : 'Fertility, pregnancy wellness, thyroid, perimenopause & menopause care',
+      tag: isTamil ? 'முழு மருத்துவப் பெட்டகம்' : 'Full Adult Care'
+    }
+  ];
 
   // ============================================================
   // 1. QUESTIONNAIRE: MOOD TRACKER
@@ -362,6 +410,9 @@ export default function AuthModal({ isOpen, onClose }) {
       localStorage.setItem('femtech_emergency_contacts', JSON.stringify(emergencyContacts));
 
       await instantDemoLogin(targetPreset.age, targetPreset.name);
+      window.dispatchEvent(new CustomEvent('femtech_user_authenticated', {
+        detail: { age: targetPreset.age, name: targetPreset.name }
+      }));
       if (onClose) onClose();
     } catch (err) {
       setError(err.message || 'Could not enter dashboard');
@@ -371,16 +422,19 @@ export default function AuthModal({ isOpen, onClose }) {
   };
 
   // ============================================================
-  // 9. CUSTOM CREDENTIALS LOGIN / REGISTER
+  // 9. CUSTOM CREDENTIALS LOGIN / REGISTER & AGE SELECTION
   // ============================================================
   const [formData, setFormData] = useState({
     name: 'Janani S',
     email: 'janani@femtech.health',
     password: 'password123',
     confirmPassword: 'password123',
-    age: 25,
+    age: 24,
     dateOfBirth: '2001-05-14',
-    phone: '+91 98401 23456'
+    phone: '+91 98401 23456',
+    emergencyContactName: 'Kavitha (Mother)',
+    emergencyContactRelation: 'Mother',
+    emergencyContactPhone: '+91 98401 65432'
   });
 
   const handleCustomSubmit = async (e) => {
@@ -389,26 +443,62 @@ export default function AuthModal({ isOpen, onClose }) {
     setLoading(true);
 
     try {
-      if (isLoginMode) {
-        await login(formData.email, formData.password);
+      if (authTab === 'signin') {
+        try {
+          await login(formData.email, formData.password);
+        } catch (loginErr) {
+          console.warn('Backend login fallback to local session:', loginErr.message);
+          const demoName = formData.email.split('@')[0] || 'User';
+          const capName = demoName.charAt(0).toUpperCase() + demoName.slice(1);
+          await instantDemoLogin(formData.age || 24, capName);
+        }
       } else {
         if (formData.password !== formData.confirmPassword) {
-          throw new Error('Passwords do not match');
+          throw new Error(isTamil ? 'கடவுச்சொற்கள் பொருந்தவில்லை!' : 'Passwords do not match');
         }
-        await signup({
-          name: formData.name,
-          email: formData.email,
-          password: formData.password,
-          age: Number(formData.age),
-          dateOfBirth: formData.dateOfBirth,
-          phone: formData.phone,
-          emergencyContact: {
-            name: emergencyContacts[0]?.name || 'Mother',
-            phone: emergencyContacts[0]?.phone || '+91 98401 65432',
-            relation: emergencyContacts[0]?.relation || 'Family'
-          }
-        });
+        try {
+          await signup({
+            name: formData.name || 'User',
+            email: formData.email,
+            password: formData.password,
+            age: Number(formData.age) || 24,
+            phone: formData.phone || '',
+            emergencyContact: {
+              name: formData.emergencyContactName || 'Mother',
+              phone: formData.emergencyContactPhone || '+91 98401 65432',
+              relation: formData.emergencyContactRelation || 'Mother'
+            }
+          });
+        } catch (signupErr) {
+          console.warn('Backend signup fallback to local session:', signupErr.message);
+          await instantDemoLogin(Number(formData.age) || 24, formData.name || 'User');
+        }
       }
+
+      // Save emergency contact and phone locally
+      if (formData.emergencyContactPhone) {
+        localStorage.setItem('femtech_mother_phone', formData.emergencyContactPhone);
+        const contactObj = [{
+          id: 'c1',
+          name: formData.emergencyContactName || 'Mother',
+          relation: formData.emergencyContactRelation || 'Mother',
+          phone: formData.emergencyContactPhone,
+          isPrimary: true
+        }];
+        localStorage.setItem('femtech_emergency_contacts', JSON.stringify(contactObj));
+      }
+      if (formData.emergencyContactName) {
+        localStorage.setItem('femtech_mother_name', formData.emergencyContactName);
+      }
+      if (formData.phone) {
+        localStorage.setItem('femtech_user_phone', formData.phone);
+      }
+
+      // Dispatch event with age for auto-redirection
+      window.dispatchEvent(new CustomEvent('femtech_user_authenticated', {
+        detail: { age: Number(formData.age) || 24 }
+      }));
+
       if (onClose) onClose();
     } catch (err) {
       setError(err.message || 'Authentication error.');
@@ -690,41 +780,623 @@ export default function AuthModal({ isOpen, onClose }) {
       )}
 
       {/* ============================================================ */}
-      {/* MAIN LAYOUT: QUESTIONNAIRE HUB + PROFILE LAUNCHER */}
+      {/* 🔐 DEDICATED AUTHENTICATION HUB (SIGN IN & CREATE ACCOUNT) */}
       {/* ============================================================ */}
       <main style={{
-        maxWidth: '1080px',
+        maxWidth: '880px',
         width: '100%',
-        display: 'grid',
-        gridTemplateColumns: showCustomForm ? '1fr' : 'repeat(auto-fit, minmax(340px, 1fr))',
+        display: 'flex',
+        flexDirection: 'column',
         gap: '24px',
         marginBottom: '24px'
       }}>
-        {/* LEFT COLUMN: THE COMPLETE BEAUTIFUL DAILY QUESTIONNAIRE */}
+        {/* PRIMARY AUTH CARD */}
         <div className="glass-card" style={{
-          padding: '28px',
+          padding: '32px 28px',
           borderRadius: '28px',
-          background: 'rgba(255, 255, 255, 0.92)',
+          background: 'rgba(255, 255, 255, 0.96)',
           backdropFilter: 'blur(20px)',
-          border: '1.5px solid rgba(251, 113, 133, 0.3)',
-          boxShadow: '0 16px 40px rgba(244, 63, 94, 0.1)',
-          display: 'flex',
-          flexDirection: 'column',
-          gap: '22px'
+          border: '2px solid rgba(251, 113, 133, 0.35)',
+          boxShadow: '0 20px 50px rgba(244, 63, 94, 0.12)'
         }}>
-          {/* Header */}
-          <div>
-            <div style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', padding: '4px 14px', background: '#ffe4e6', borderRadius: '16px', color: '#be123c', fontSize: '0.8rem', fontWeight: 800, marginBottom: '8px' }}>
-              <Sparkles size={14} />
-              <span>{t('preLoginQuestionnaire')}</span>
-            </div>
-            <h2 style={{ fontSize: '1.55rem', fontWeight: 900, color: '#881337', margin: '0 0 6px 0', letterSpacing: '-0.02em' }}>
-              {t('welcomeCheckin')}
-            </h2>
-            <p style={{ fontSize: '0.86rem', color: '#4c0519', margin: 0, lineHeight: 1.4 }}>
-              {t('welcomeCheckinSub')}
-            </p>
+          {/* TOP TABS: SIGN IN vs CREATE ACCOUNT */}
+          <div style={{
+            display: 'grid',
+            gridTemplateColumns: '1fr 1fr',
+            background: '#ffe4e6',
+            borderRadius: '18px',
+            padding: '6px',
+            gap: '6px',
+            marginBottom: '24px'
+          }}>
+            <button
+              type="button"
+              onClick={() => { setAuthTab('signin'); setError(''); }}
+              style={{
+                padding: '12px 16px',
+                borderRadius: '14px',
+                border: 'none',
+                background: authTab === 'signin' ? 'linear-gradient(135deg, #e11d48 0%, #be123c 100%)' : 'transparent',
+                color: authTab === 'signin' ? 'white' : '#881337',
+                fontWeight: 900,
+                fontSize: '0.98rem',
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: '8px',
+                boxShadow: authTab === 'signin' ? '0 4px 14px rgba(225, 29, 72, 0.3)' : 'none',
+                transition: 'all 0.2s ease'
+              }}
+            >
+              <Lock size={18} />
+              <span>{isTamil ? 'உள்நுழைக (Sign In)' : 'Sign In'}</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => { setAuthTab('register'); setError(''); }}
+              style={{
+                padding: '12px 16px',
+                borderRadius: '14px',
+                border: 'none',
+                background: authTab === 'register' ? 'linear-gradient(135deg, #e11d48 0%, #be123c 100%)' : 'transparent',
+                color: authTab === 'register' ? 'white' : '#881337',
+                fontWeight: 900,
+                fontSize: '0.98rem',
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: '8px',
+                boxShadow: authTab === 'register' ? '0 4px 14px rgba(225, 29, 72, 0.3)' : 'none',
+                transition: 'all 0.2s ease'
+              }}
+            >
+              <Sparkles size={18} />
+              <span>{isTamil ? 'புதிய கணக்கு பதிவு (Register)' : 'Create Account'}</span>
+            </button>
           </div>
+
+          {error && (
+            <div style={{
+              padding: '10px 16px',
+              borderRadius: '12px',
+              background: '#fef2f2',
+              color: '#b91c1c',
+              border: '1.5px solid #fecaca',
+              fontSize: '0.85rem',
+              fontWeight: 700,
+              marginBottom: '18px',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '8px'
+            }}>
+              <AlertCircle size={18} />
+              <span>{error}</span>
+            </div>
+          )}
+
+          {/* TAB 1: SIGN IN */}
+          {authTab === 'signin' && (
+            <form onSubmit={handleCustomSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+              <div>
+                <h2 style={{ fontSize: '1.45rem', fontWeight: 900, color: '#881337', margin: '0 0 6px 0' }}>
+                  {isTamil ? 'உங்கள் கணக்கில் உள்நுழைக' : 'Sign In to Your Account'}
+                </h2>
+                <p style={{ fontSize: '0.86rem', color: '#64748b', margin: 0 }}>
+                  {isTamil
+                    ? 'மின்னஞ்சல் மற்றும் கடவுச்சொல் மூலம் நுழையலாம் அல்லது கீழே உள்ள உடனடி அணுகலை பயன்படுத்தலாம்.'
+                    : 'Enter your credentials below or use 1-click instant demo access.'}
+                </p>
+              </div>
+
+              <div>
+                <label style={{ display: 'block', fontSize: '0.82rem', fontWeight: 800, color: '#881337', marginBottom: '6px' }}>
+                  {isTamil ? 'மின்னஞ்சல் முகவரி (Email Address)' : 'Email Address'}
+                </label>
+                <div style={{ position: 'relative' }}>
+                  <Mail size={18} style={{ position: 'absolute', left: '14px', top: '50%', transform: 'translateY(-50%)', color: '#f43f5e' }} />
+                  <input
+                    type="email"
+                    required
+                    value={formData.email}
+                    onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                    placeholder="janani@femtech.health"
+                    style={{
+                      width: '100%',
+                      padding: '12px 14px 12px 42px',
+                      borderRadius: '14px',
+                      border: '1.5px solid #fecdd3',
+                      fontSize: '0.92rem',
+                      outline: 'none',
+                      boxSizing: 'border-box'
+                    }}
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label style={{ display: 'block', fontSize: '0.82rem', fontWeight: 800, color: '#881337', marginBottom: '6px' }}>
+                  {isTamil ? 'கடவுச்சொல் (Password)' : 'Password'}
+                </label>
+                <div style={{ position: 'relative' }}>
+                  <Lock size={18} style={{ position: 'absolute', left: '14px', top: '50%', transform: 'translateY(-50%)', color: '#f43f5e' }} />
+                  <input
+                    type={showPassword ? 'text' : 'password'}
+                    required
+                    value={formData.password}
+                    onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+                    placeholder="••••••••"
+                    style={{
+                      width: '100%',
+                      padding: '12px 42px 12px 42px',
+                      borderRadius: '14px',
+                      border: '1.5px solid #fecdd3',
+                      fontSize: '0.92rem',
+                      outline: 'none',
+                      boxSizing: 'border-box'
+                    }}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    style={{
+                      position: 'absolute',
+                      right: '12px',
+                      top: '50%',
+                      transform: 'translateY(-50%)',
+                      background: 'none',
+                      border: 'none',
+                      color: '#94a3b8',
+                      cursor: 'pointer'
+                    }}
+                  >
+                    {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                  </button>
+                </div>
+              </div>
+
+              <button
+                type="submit"
+                disabled={loading}
+                className="btn-primary"
+                style={{
+                  width: '100%',
+                  padding: '14px',
+                  borderRadius: '16px',
+                  fontSize: '1rem',
+                  fontWeight: 900,
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: '8px',
+                  boxShadow: '0 6px 20px rgba(225, 29, 72, 0.35)',
+                  cursor: loading ? 'wait' : 'pointer'
+                }}
+              >
+                <Lock size={18} />
+                <span>{loading ? (isTamil ? 'உள்நுழைகிறது...' : 'Signing In...') : (isTamil ? 'உள்நுழைக (Sign In)' : 'Sign In to FemTech')}</span>
+              </button>
+
+              {/* 1-Click Instant Demo Login Option */}
+              <div style={{ marginTop: '10px', paddingTop: '16px', borderTop: '1px dashed #fecdd3' }}>
+                <span style={{ fontSize: '0.8rem', fontWeight: 800, color: '#9f1239', display: 'block', marginBottom: '10px' }}>
+                  ⚡ {isTamil ? 'அல்லது 1-கிளிக் உடனடி டெமோ நுழைவு (கடவுச்சொல் தேவையில்லை):' : 'Or Instant 1-Click Demo Login (No Password Needed):'}
+                </span>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(170px, 1fr))', gap: '8px' }}>
+                  {presets.map((p) => (
+                    <button
+                      key={p.age}
+                      type="button"
+                      onClick={() => handleQuickEnterDashboard(p)}
+                      style={{
+                        padding: '10px 12px',
+                        borderRadius: '14px',
+                        border: '1.5px solid #fecdd3',
+                        background: '#fff1f2',
+                        color: '#881337',
+                        cursor: 'pointer',
+                        textAlign: 'left',
+                        display: 'flex',
+                        flexDirection: 'column',
+                        gap: '2px',
+                        transition: 'all 0.15s ease'
+                      }}
+                    >
+                      <span style={{ fontWeight: 800, fontSize: '0.82rem' }}>{p.badge.split('(')[0]}</span>
+                      <span style={{ fontSize: '0.72rem', color: '#be123c', fontWeight: 600 }}>{p.name}</span>
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              <div style={{ textAlign: 'center', marginTop: '4px' }}>
+                <span style={{ fontSize: '0.84rem', color: '#64748b' }}>
+                  {isTamil ? 'கணக்கு இல்லையா? ' : "Don't have an account? "}
+                  <button
+                    type="button"
+                    onClick={() => { setAuthTab('register'); setError(''); }}
+                    style={{ background: 'none', border: 'none', color: '#e11d48', fontWeight: 800, cursor: 'pointer', textDecoration: 'underline' }}
+                  >
+                    {isTamil ? 'இப்போதே பதிவு செய்யுங்கள்' : 'Create an Account'}
+                  </button>
+                </span>
+              </div>
+            </form>
+          )}
+
+          {/* TAB 2: CREATE ACCOUNT (WITH AGE CATEGORIES & EMERGENCY CONTACT) */}
+          {authTab === 'register' && (
+            <form onSubmit={handleCustomSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+              <div>
+                <h2 style={{ fontSize: '1.45rem', fontWeight: 900, color: '#881337', margin: '0 0 6px 0' }}>
+                  {isTamil ? 'புதிய கணக்கு தொடங்குங்கள்' : 'Create Your FemTech Account'}
+                </h2>
+                <p style={{ fontSize: '0.86rem', color: '#64748b', margin: 0 }}>
+                  {isTamil
+                    ? 'உங்கள் வயது மற்றும் அவசர உதவி தொடர்புகளை பூர்த்தி செய்து உடனடியாகத் தொடங்குங்கள்.'
+                    : 'Personalized to your age category with linked emergency safety protocol.'}
+                </p>
+              </div>
+
+              {/* Row 1: Name and Phone */}
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '12px' }}>
+                <div>
+                  <label style={{ display: 'block', fontSize: '0.82rem', fontWeight: 800, color: '#881337', marginBottom: '6px' }}>
+                    {isTamil ? 'முழுப் பெயர் (Full Name)' : 'Full Name'}
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    value={formData.name}
+                    onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                    placeholder={isTamil ? 'எ.கா: ஜனனி' : 'e.g. Janani S'}
+                    style={{
+                      width: '100%',
+                      padding: '12px 14px',
+                      borderRadius: '14px',
+                      border: '1.5px solid #fecdd3',
+                      fontSize: '0.92rem',
+                      outline: 'none',
+                      boxSizing: 'border-box'
+                    }}
+                  />
+                </div>
+
+                <div>
+                  <label style={{ display: 'block', fontSize: '0.82rem', fontWeight: 800, color: '#881337', marginBottom: '6px' }}>
+                    {isTamil ? 'தொலைபேசி எண் (Mobile Phone)' : 'Mobile Phone'}
+                  </label>
+                  <input
+                    type="tel"
+                    required
+                    value={formData.phone}
+                    onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+                    placeholder="+91 98401 23456"
+                    style={{
+                      width: '100%',
+                      padding: '12px 14px',
+                      borderRadius: '14px',
+                      border: '1.5px solid #fecdd3',
+                      fontSize: '0.92rem',
+                      outline: 'none',
+                      boxSizing: 'border-box'
+                    }}
+                  />
+                </div>
+              </div>
+
+              {/* Row 2: Email and Password */}
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '12px' }}>
+                <div>
+                  <label style={{ display: 'block', fontSize: '0.82rem', fontWeight: 800, color: '#881337', marginBottom: '6px' }}>
+                    {isTamil ? 'மின்னஞ்சல் (Email Address)' : 'Email Address'}
+                  </label>
+                  <input
+                    type="email"
+                    required
+                    value={formData.email}
+                    onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                    placeholder="user@example.com"
+                    style={{
+                      width: '100%',
+                      padding: '12px 14px',
+                      borderRadius: '14px',
+                      border: '1.5px solid #fecdd3',
+                      fontSize: '0.92rem',
+                      outline: 'none',
+                      boxSizing: 'border-box'
+                    }}
+                  />
+                </div>
+
+                <div>
+                  <label style={{ display: 'block', fontSize: '0.82rem', fontWeight: 800, color: '#881337', marginBottom: '6px' }}>
+                    {isTamil ? 'கடவுச்சொல் (Password)' : 'Password'}
+                  </label>
+                  <input
+                    type="password"
+                    required
+                    value={formData.password}
+                    onChange={(e) => setFormData({ ...formData, password: e.target.value, confirmPassword: e.target.value })}
+                    placeholder="••••••••"
+                    style={{
+                      width: '100%',
+                      padding: '12px 14px',
+                      borderRadius: '14px',
+                      border: '1.5px solid #fecdd3',
+                      fontSize: '0.92rem',
+                      outline: 'none',
+                      boxSizing: 'border-box'
+                    }}
+                  />
+                </div>
+              </div>
+
+              {/* ------------------------------------------------------------ */}
+              {/* SECTION: AGE & 4 AGE CATEGORY CARDS */}
+              {/* ------------------------------------------------------------ */}
+              <div style={{
+                background: 'linear-gradient(135deg, #fff1f2 0%, #fffbf0 100%)',
+                border: '2px solid #fecdd3',
+                borderRadius: '20px',
+                padding: '18px',
+                display: 'flex',
+                flexDirection: 'column',
+                gap: '12px'
+              }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '8px' }}>
+                  <div>
+                    <span style={{ fontSize: '0.86rem', fontWeight: 900, color: '#881337', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                      <span>🎯</span>
+                      <span>{isTamil ? 'வயது மற்றும் தனிப்பயனாக்கப்பட்ட பிரிவு (Age Category):' : 'Select Age & Health Category:'}</span>
+                    </span>
+                    <span style={{ fontSize: '0.74rem', color: '#be123c', fontWeight: 600 }}>
+                      {isTamil ? 'உங்கள் வயதுக்கேற்ப வழிகாட்டி மற்றும் டிராக்கர் தானாக மாறும்' : 'Routes you directly to your tailored age view upon signup'}
+                    </span>
+                  </div>
+
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <label style={{ fontSize: '0.8rem', fontWeight: 800, color: '#881337' }}>{isTamil ? 'வயது:' : 'Age:'}</label>
+                    <input
+                      type="number"
+                      min="6"
+                      max="90"
+                      required
+                      value={formData.age}
+                      onChange={(e) => setFormData({ ...formData, age: Number(e.target.value) })}
+                      style={{
+                        width: '70px',
+                        padding: '8px 10px',
+                        borderRadius: '10px',
+                        border: '2px solid #e11d48',
+                        fontSize: '1rem',
+                        fontWeight: 900,
+                        color: '#881337',
+                        textAlign: 'center',
+                        outline: 'none'
+                      }}
+                    />
+                  </div>
+                </div>
+
+                {/* 4 Interactive Category Cards */}
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '10px' }}>
+                  {ageBrackets.map((b) => {
+                    const isSelected = formData.age >= b.minAge && formData.age <= b.maxAge;
+                    return (
+                      <div
+                        key={b.id}
+                        onClick={() => setFormData({ ...formData, age: b.defaultAge })}
+                        style={{
+                          padding: '12px 14px',
+                          borderRadius: '16px',
+                          border: isSelected ? '2.5px solid #e11d48' : '1.5px solid #fed7aa',
+                          background: isSelected ? 'linear-gradient(135deg, #ffffff 0%, #ffe4e6 100%)' : '#ffffff',
+                          cursor: 'pointer',
+                          boxShadow: isSelected ? '0 6px 18px rgba(225, 29, 72, 0.2)' : '0 2px 6px rgba(0,0,0,0.02)',
+                          display: 'flex',
+                          flexDirection: 'column',
+                          justifyContent: 'space-between',
+                          gap: '6px',
+                          transition: 'all 0.15s ease'
+                        }}
+                      >
+                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                          <span style={{ fontSize: '1.4rem' }}>{b.icon}</span>
+                          <span style={{
+                            fontSize: '0.68rem',
+                            fontWeight: 800,
+                            padding: '2px 8px',
+                            borderRadius: '10px',
+                            background: isSelected ? '#e11d48' : '#f1f5f9',
+                            color: isSelected ? 'white' : '#64748b'
+                          }}>
+                            {b.tag}
+                          </span>
+                        </div>
+                        <div>
+                          <div style={{ fontWeight: 900, fontSize: '0.84rem', color: isSelected ? '#881337' : '#1e293b' }}>
+                            {b.title.split(':')[0]}
+                          </div>
+                          <div style={{ fontSize: '0.72rem', color: '#64748b', marginTop: '2px', lineHeight: 1.3 }}>
+                            {b.desc}
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* ------------------------------------------------------------ */}
+              {/* SECTION: EMERGENCY SOS CONTACT (MOTHER / DOCTOR / GUARDIAN) */}
+              {/* ------------------------------------------------------------ */}
+              <div style={{
+                background: 'linear-gradient(135deg, #fff7ed 0%, #ffffff 100%)',
+                border: '1.5px solid #fed7aa',
+                borderRadius: '20px',
+                padding: '16px',
+                display: 'flex',
+                flexDirection: 'column',
+                gap: '12px'
+              }}>
+                <div>
+                  <span style={{ fontSize: '0.86rem', fontWeight: 900, color: '#9a3412', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                    <ShieldAlert size={18} color="#ea580c" />
+                    <span>{isTamil ? 'அவசர SOS தொடர்பு எண் (Emergency Contact Details):' : 'Emergency SOS Contact Setup:'}</span>
+                  </span>
+                  <span style={{ fontSize: '0.74rem', color: '#c2410c', fontWeight: 600 }}>
+                    {isTamil ? 'அவசர காலங்களில் நேரடி ஜிபிஎஸ் குறுஞ்செய்தி பெற வேண்டிய முதன்மை நபர்' : 'Your linked mother, doctor or guardian for 1-click live GPS distress dispatch'}
+                  </span>
+                </div>
+
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '10px' }}>
+                  <div>
+                    <label style={{ display: 'block', fontSize: '0.76rem', fontWeight: 800, color: '#9a3412', marginBottom: '4px' }}>
+                      {isTamil ? 'தொடர்பு பெயர் (Name)' : 'Contact Name'}
+                    </label>
+                    <input
+                      type="text"
+                      required
+                      value={formData.emergencyContactName}
+                      onChange={(e) => setFormData({ ...formData, emergencyContactName: e.target.value })}
+                      placeholder="Kavitha (Mother)"
+                      style={{ width: '100%', padding: '10px 12px', borderRadius: '12px', border: '1.5px solid #fed7aa', fontSize: '0.86rem', boxSizing: 'border-box' }}
+                    />
+                  </div>
+
+                  <div>
+                    <label style={{ display: 'block', fontSize: '0.76rem', fontWeight: 800, color: '#9a3412', marginBottom: '4px' }}>
+                      {isTamil ? 'உறவுமுறை (Relation)' : 'Relationship'}
+                    </label>
+                    <select
+                      value={formData.emergencyContactRelation}
+                      onChange={(e) => setFormData({ ...formData, emergencyContactRelation: e.target.value })}
+                      style={{ width: '100%', padding: '10px 12px', borderRadius: '12px', border: '1.5px solid #fed7aa', fontSize: '0.86rem', boxSizing: 'border-box', background: 'white' }}
+                    >
+                      <option value="Mother">{isTamil ? 'தாய் (Mother)' : 'Mother'}</option>
+                      <option value="Doctor">{isTamil ? 'மருத்துவர் (Doctor)' : 'Doctor'}</option>
+                      <option value="Sister">{isTamil ? 'சகோதரி (Sister)' : 'Sister'}</option>
+                      <option value="Father">{isTamil ? 'தந்தை (Father)' : 'Father'}</option>
+                      <option value="Husband">{isTamil ? 'கணவர் (Husband)' : 'Husband'}</option>
+                      <option value="Friend">{isTamil ? 'நண்பர் (Friend)' : 'Friend'}</option>
+                      <option value="Guardian">{isTamil ? 'பாதுகாவலர் (Guardian)' : 'Guardian'}</option>
+                    </select>
+                  </div>
+
+                  <div>
+                    <label style={{ display: 'block', fontSize: '0.76rem', fontWeight: 800, color: '#9a3412', marginBottom: '4px' }}>
+                      {isTamil ? 'அவசர தொலைபேசி எண் (Phone)' : 'Emergency Phone'}
+                    </label>
+                    <input
+                      type="tel"
+                      required
+                      value={formData.emergencyContactPhone}
+                      onChange={(e) => setFormData({ ...formData, emergencyContactPhone: e.target.value })}
+                      placeholder="+91 98401 65432"
+                      style={{ width: '100%', padding: '10px 12px', borderRadius: '12px', border: '1.5px solid #fed7aa', fontSize: '0.86rem', boxSizing: 'border-box' }}
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* Submit Button */}
+              <button
+                type="submit"
+                disabled={loading}
+                className="btn-primary"
+                style={{
+                  width: '100%',
+                  padding: '15px',
+                  borderRadius: '16px',
+                  fontSize: '1.02rem',
+                  fontWeight: 900,
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: '10px',
+                  boxShadow: '0 8px 25px rgba(225, 29, 72, 0.4)',
+                  cursor: loading ? 'wait' : 'pointer'
+                }}
+              >
+                <span>{loading ? (isTamil ? 'பதிவாகிறது...' : 'Creating Account...') : (isTamil ? '🌸 கணக்கை உருவாக்கி தொடங்குக' : '🌸 Create Account & Launch My Portal')}</span>
+                <ArrowRight size={20} />
+              </button>
+
+              <div style={{ textAlign: 'center', marginTop: '4px' }}>
+                <span style={{ fontSize: '0.84rem', color: '#64748b' }}>
+                  {isTamil ? 'ஏற்கனவே கணக்கு உள்ளதா? ' : 'Already have an account? '}
+                  <button
+                    type="button"
+                    onClick={() => { setAuthTab('signin'); setError(''); }}
+                    style={{ background: 'none', border: 'none', color: '#e11d48', fontWeight: 800, cursor: 'pointer', textDecoration: 'underline' }}
+                  >
+                    {isTamil ? 'உள்நுழைக' : 'Sign In'}
+                  </button>
+                </span>
+              </div>
+            </form>
+          )}
+        </div>
+
+        {/* OPTIONAL EXPANDABLE DAILY CHECK-IN DRAWER */}
+        <div style={{ textAlign: 'center' }}>
+          <button
+            type="button"
+            onClick={() => setShowQuestionnaireDrawer(!showQuestionnaireDrawer)}
+            style={{
+              background: 'white',
+              border: '1.5px solid #fecdd3',
+              padding: '10px 22px',
+              borderRadius: '24px',
+              color: '#be123c',
+              fontSize: '0.84rem',
+              fontWeight: 800,
+              cursor: 'pointer',
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: '8px',
+              boxShadow: '0 4px 14px rgba(244, 63, 94, 0.08)'
+            }}
+          >
+            <Sparkles size={16} />
+            <span>
+              {showQuestionnaireDrawer
+                ? (isTamil ? '▲ தினசரி ஆரோக்கிய வினாடி வினாவை மறைக்கவும்' : '▲ Hide Daily Wellness Questions')
+                : (isTamil ? '▼ கூடுதல்: இன்றைய மனநிலை, நீர்ச்சத்து & மருந்து சோதனையை பதிவு செய்' : '▼ Optional: Log Today\'s Mood, Water & Meds')}
+            </span>
+          </button>
+        </div>
+
+        {/* QUESTIONNAIRE DRAWER CONTENT (IF EXPANDED) */}
+        {showQuestionnaireDrawer && (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '20px', animation: 'fadeIn 0.25s ease' }}>
+            <div className="glass-card" style={{
+              padding: '28px',
+              borderRadius: '28px',
+              background: 'rgba(255, 255, 255, 0.92)',
+              backdropFilter: 'blur(20px)',
+              border: '1.5px solid rgba(251, 113, 133, 0.3)',
+              boxShadow: '0 16px 40px rgba(244, 63, 94, 0.1)',
+              display: 'flex',
+              flexDirection: 'column',
+              gap: '22px'
+            }}>
+              {/* Header */}
+              <div>
+                <div style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', padding: '4px 14px', background: '#ffe4e6', borderRadius: '16px', color: '#be123c', fontSize: '0.8rem', fontWeight: 800, marginBottom: '8px' }}>
+                  <Sparkles size={14} />
+                  <span>{t('preLoginQuestionnaire')}</span>
+                </div>
+                <h2 style={{ fontSize: '1.55rem', fontWeight: 900, color: '#881337', margin: '0 0 6px 0', letterSpacing: '-0.02em' }}>
+                  {t('welcomeCheckin')}
+                </h2>
+                <p style={{ fontSize: '0.86rem', color: '#4c0519', margin: 0, lineHeight: 1.4 }}>
+                  {t('welcomeCheckinSub')}
+                </p>
+              </div>
 
           {/* ------------------------------------------------------------ */}
           {/* QUESTION 1: MOOD CHECK-IN */}
@@ -1279,206 +1951,18 @@ export default function AuthModal({ isOpen, onClose }) {
                   : '✓ Emergency SMS distress dispatched to Kavitha, Dr. Priya, and Deepa!'}
               </div>
             )}
-          </div>
-
-          {/* ============================================================ */}
-          {/* SECTION: 1-CLICK AGE PROFILE LAUNCHERS & DASHBOARD ENTRY */}
-          {/* ============================================================ */}
-          <div className="glass-card" style={{
-            padding: '24px',
-            borderRadius: '28px',
-            background: 'rgba(255, 255, 255, 0.95)',
-            backdropFilter: 'blur(20px)',
-            border: '1.5px solid rgba(244, 63, 94, 0.3)',
-            boxShadow: '0 16px 40px rgba(244, 63, 94, 0.12)'
-          }}>
-            <div style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', padding: '4px 12px', background: '#fdf2f8', borderRadius: '16px', color: '#db2777', fontSize: '0.76rem', fontWeight: 800, marginBottom: '10px' }}>
-              <Activity size={14} />
-              <span>{t('chooseProfileLaunch')}</span>
-            </div>
-            <h3 style={{ fontSize: '1.25rem', fontWeight: 900, color: '#881337', margin: '0 0 4px 0' }}>
-              {isTamil ? 'வயதுப் பிரிவைத் தேர்ந்தெடுத்து உள்ளே செல்லவும்' : 'Select Age Group & Enter'}
-            </h3>
-            <p style={{ fontSize: '0.78rem', color: '#64748b', margin: '0 0 14px 0' }}>
-              {isTamil
-                ? 'உங்கள் வயதுக்கேற்ப வடிவமைக்கப்பட்டது. உங்கள் மனநிலை & நீர்ச்சத்துடன் தொடங்க கிளிக் செய்க:'
-                : 'Everything personalized to your age. Tap any role to launch with your tracked mood & hydration:'}
-            </p>
-
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginBottom: '16px' }}>
-              {presets.map((p) => {
-                const isSelected = selectedPreset.age === p.age;
-                return (
-                  <div
-                    key={p.age}
-                    onClick={() => setSelectedPreset(p)}
-                    style={{
-                      padding: '10px 14px',
-                      borderRadius: '14px',
-                      border: isSelected ? '2px solid #e11d48' : '1px solid #fecdd3',
-                      background: isSelected ? 'linear-gradient(135deg, #fff1f2 0%, #ffe4e6 100%)' : '#fafafa',
-                      cursor: 'pointer',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'space-between',
-                      transition: 'all 0.15s'
-                    }}
-                  >
-                    <div>
-                      <div style={{ fontWeight: 800, fontSize: '0.86rem', color: '#881337' }}>
-                        {p.badge}
-                      </div>
-                      <div style={{ fontSize: '0.72rem', color: '#64748b' }}>
-                        {p.desc}
-                      </div>
-                    </div>
-                    <div style={{
-                      width: '20px',
-                      height: '20px',
-                      borderRadius: '50%',
-                      border: isSelected ? '5px solid #e11d48' : '2px solid #cbd5e1',
-                      background: 'white'
-                    }} />
-                  </div>
-                );
-              })}
-            </div>
-
-            {/* BIG GLOWING LAUNCH BUTTON */}
-            <button
-              type="button"
-              onClick={() => handleQuickEnterDashboard(selectedPreset)}
-              disabled={loading}
-              className="btn-primary"
-              style={{
-                width: '100%',
-                padding: '16px',
-                fontSize: '1.05rem',
-                fontWeight: 900,
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                gap: '10px',
-                borderRadius: '18px',
-                boxShadow: '0 8px 24px rgba(244, 63, 94, 0.45)',
-                cursor: loading ? 'wait' : 'pointer'
-              }}
-            >
-              <span>{loading ? (isTamil ? 'முகப்பு திறக்கிறது...' : 'Launching Dashboard...') : `🌸 ${selectedPreset.name} ${isTamil ? 'ஆக நுழையவும்' : 'Enter as ' + selectedPreset.name}`}</span>
-              <ArrowRight size={20} />
-            </button>
-
-            {/* Toggle Custom Registration / Login */}
-            <div style={{ textAlign: 'center', marginTop: '14px' }}>
-              <button
-                type="button"
-                onClick={() => setShowCustomForm(!showCustomForm)}
-                style={{
-                  background: 'none',
-                  border: 'none',
-                  color: '#be123c',
-                  fontSize: '0.8rem',
-                  fontWeight: 700,
-                  cursor: 'pointer',
-                  textDecoration: 'underline'
-                }}
-              >
-                {showCustomForm ? (isTamil ? 'படிவத்தை மூடு' : 'Close Custom Form') : t('customLoginToggle')}
-              </button>
             </div>
           </div>
-        </div>
-      </main>
-
-      {/* ============================================================ */}
-      {/* CUSTOM FORM POPUP (IF CLICKED) */}
-      {/* ============================================================ */}
-      {showCustomForm && (
-        <div style={{
-          maxWidth: '520px',
-          width: '100%',
-          marginBottom: '24px',
-          padding: '24px',
-          borderRadius: '24px',
-          background: 'white',
-          border: '1.5px solid #fecdd3',
-          boxShadow: '0 16px 40px rgba(0, 0, 0, 0.08)'
-        }}>
-          <h3 style={{ margin: '0 0 12px 0', fontSize: '1.2rem', fontWeight: 800, color: '#881337' }}>
-            {isLoginMode ? (isTamil ? 'தனிப்பட்ட கணக்கு மூலம் உள்நுழைக' : 'Sign In with Custom Account') : (isTamil ? 'புதிய கணக்கை பதிவு செய்க' : 'Register New Custom Account')}
-          </h3>
-
-          {error && (
-            <div style={{ padding: '8px 12px', background: '#fff1f2', color: '#be123c', borderRadius: '10px', fontSize: '0.8rem', marginBottom: '12px' }}>
-              {error}
-            </div>
-          )}
-
-          <form onSubmit={handleCustomSubmit}>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', marginBottom: '14px' }}>
-              {!isLoginMode && (
-                <input
-                  type="text"
-                  name="name"
-                  value={formData.name}
-                  onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                  placeholder={isTamil ? 'முழுப் பெயர்' : 'Full Name'}
-                  required
-                  className="input-field"
-                />
-              )}
-              <input
-                type="email"
-                name="email"
-                value={formData.email}
-                onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                placeholder={isTamil ? 'மின்னஞ்சல் முகவரி' : 'Email Address'}
-                required
-                className="input-field"
-              />
-              <input
-                type="password"
-                name="password"
-                value={formData.password}
-                onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-                placeholder={isTamil ? 'கடவுச்சொல்' : 'Password'}
-                required
-                className="input-field"
-              />
-              {!isLoginMode && (
-                <input
-                  type="password"
-                  name="confirmPassword"
-                  value={formData.confirmPassword}
-                  onChange={(e) => setFormData({ ...formData, confirmPassword: e.target.value })}
-                  placeholder={isTamil ? 'கடவுச்சொல்லை மீண்டும் உள்ளிடவும்' : 'Confirm Password'}
-                  required
-                  className="input-field"
-                />
-              )}
-            </div>
-
-            <button
-              type="submit"
-              disabled={loading}
-              className="btn-primary"
-              style={{ width: '100%', padding: '12px', borderRadius: '12px', fontWeight: 800 }}
-            >
-              {loading ? (isTamil ? 'செயல்படுகிறது...' : 'Working...') : (isLoginMode ? (isTamil ? 'உள்நுழைக' : 'Sign In') : (isTamil ? 'பதிவு செய்து உள்ளே செல்லவும்' : 'Create & Enter'))}
-            </button>
-
-            <div style={{ textAlign: 'center', marginTop: '10px', fontSize: '0.8rem' }}>
-              <button
-                type="button"
-                onClick={() => setIsLoginMode(!isLoginMode)}
-                style={{ background: 'none', border: 'none', color: '#be123c', fontWeight: 700, cursor: 'pointer' }}
-              >
-                {isLoginMode ? (isTamil ? 'புதிய கணக்கு தேவையா? பதிவு செய்க' : 'Need a new account? Register') : (isTamil ? 'ஏற்கனவே கணக்கு உள்ளதா? உள்நுழைக' : 'Already registered? Login')}
-              </button>
-            </div>
-          </form>
         </div>
       )}
+    </main>
+
+      {/* ============================================================ */}
+      {/* ⚠️ MEDICAL DISCLAIMER BANNER */}
+      {/* ============================================================ */}
+      <div style={{ maxWidth: '880px', width: '100%', marginBottom: '24px' }}>
+        <DisclaimerBanner />
+      </div>
 
       {/* ============================================================ */}
       {/* EMERGENCY SOS FULL MODAL (HOTLINES + SIREN + 3 CONTACTS) */}

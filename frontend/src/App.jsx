@@ -47,20 +47,30 @@ export default function App() {
   const [showPhoneModal, setShowPhoneModal] = useState(false);
   const [showCelebration, setShowCelebration] = useState(false);
 
-  // Listen for open phone modal event and celebrate events
+  // Listen for open phone modal event, celebration, and age-based auth routing
   React.useEffect(() => {
     const handleOpenPhone = () => setShowPhoneModal(true);
     const handleCelebrate = () => {
       setShowCelebration(false);
       setTimeout(() => setShowCelebration(true), 50);
     };
+    const handleUserAuth = (e) => {
+      const userAge = e?.detail?.age;
+      if (userAge && userAge <= 16) {
+        setCurrentTab('health-guide');
+      } else {
+        setCurrentTab('dashboard');
+      }
+    };
 
     window.addEventListener('femtech_open_phone_modal', handleOpenPhone);
     window.addEventListener('femtech_celebrate', handleCelebrate);
+    window.addEventListener('femtech_user_authenticated', handleUserAuth);
 
     return () => {
       window.removeEventListener('femtech_open_phone_modal', handleOpenPhone);
       window.removeEventListener('femtech_celebrate', handleCelebrate);
+      window.removeEventListener('femtech_user_authenticated', handleUserAuth);
     };
   }, []);
 

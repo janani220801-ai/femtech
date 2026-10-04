@@ -831,7 +831,20 @@ export default function NearbyCare() {
         const sub = addr.suburb || addr.neighbourhood || addr.village || addr.town || addr.city_district || '';
         const city = addr.city || addr.state_district || addr.county || '';
         const place = sub ? `${sub}${city ? `, ${city}` : ''}` : (data.name || `GPS: ${lat.toFixed(4)}° N, ${lng.toFixed(4)}° E`);
-        setUserLocation(prev => ({ ...prev, locality: place }));
+        const fullAddr = data.display_name || place;
+        
+        setUserLocation(prev => ({ ...prev, locality: place, fullAddress: fullAddr }));
+        localStorage.setItem('femtech_live_location', JSON.stringify({
+          lat,
+          lng,
+          locality: place,
+          address: fullAddr,
+          updatedAt: new Date().toISOString()
+        }));
+        localStorage.setItem('femtech_current_address', fullAddr);
+        window.dispatchEvent(new CustomEvent('femtech_location_updated', {
+          detail: { lat, lng, locality: place, address: fullAddr }
+        }));
       }
     } catch (e) {
       console.debug('Reverse geocode notice:', e.message);
@@ -864,13 +877,26 @@ export default function NearbyCare() {
 
   // 1-Click Set Exact Location to Navalur (OMR)
   const setNavalurLocation = () => {
+    const navalurAddr = language === 'ta' ? 'நாவலூர், OMR சாலை, சென்னை - 603103' : 'Navalur, OMR Road, Chennai - 603103';
     setUserLocation({
       lat: 12.8458,
       lng: 80.2265,
       accuracy: 8,
       locality: language === 'ta' ? 'நாவலூர் (OMR), சென்னை - 603103' : 'Navalur (OMR), Chennai - 603103',
+      fullAddress: navalurAddr,
       isGpsLive: true
     });
+    localStorage.setItem('femtech_live_location', JSON.stringify({
+      lat: 12.8458,
+      lng: 80.2265,
+      locality: 'Navalur (OMR), Chennai',
+      address: navalurAddr,
+      updatedAt: new Date().toISOString()
+    }));
+    localStorage.setItem('femtech_current_address', navalurAddr);
+    window.dispatchEvent(new CustomEvent('femtech_location_updated', {
+      detail: { lat: 12.8458, lng: 80.2265, locality: 'Navalur (OMR)', address: navalurAddr }
+    }));
     setGpsStatusMessage(language === 'ta' ? '🟢 நாவலூர், OMR (உறுதிசெய்யப்பட்டது)' : '🟢 Navalur, OMR (Confirmed)');
     setCareData(computeDirectoryWithDistances(12.8458, 80.2265));
     fetchCareData(12.8458, 80.2265);
@@ -889,6 +915,14 @@ export default function NearbyCare() {
       accuracy: Math.round(accuracy || 10),
       locality: prev.locality && !prev.locality.includes('Position') ? prev.locality : defaultName,
       isGpsLive: true
+    }));
+
+    localStorage.setItem('femtech_live_location', JSON.stringify({
+      lat: latitude,
+      lng: longitude,
+      accuracy: Math.round(accuracy || 10),
+      locality: defaultName,
+      updatedAt: new Date().toISOString()
     }));
 
     setGpsStatusMessage(`🟢 ${dict.gpsActiveBadge} (±${Math.round(accuracy || 10)}m • Live Tracking)`);
@@ -1131,60 +1165,97 @@ export default function NearbyCare() {
         </a>
       </div>
 
-      {/* 2. LIVE CURRENT LOCATION TRACKER BOX */}
+      {/* 2. LIVE CURRENT LOCATION TRACKER BOX (Vibrant Glowing Real-time GPS Card) */}
       <div
+        className="glass-card"
         style={{
-          background: 'linear-gradient(135deg, #ffffff 0%, #f8fafc 100%)',
-          borderRadius: '20px',
-          border: '2px solid #fed7aa',
-          padding: '20px 24px',
+          background: 'linear-gradient(135deg, #ffffff 0%, #fff7ed 50%, #fef2f2 100%)',
+          borderRadius: '24px',
+          border: '2px solid #fb7185',
+          padding: '24px',
           marginBottom: '26px',
-          boxShadow: '0 8px 24px rgba(234, 88, 12, 0.08)'
+          boxShadow: '0 12px 36px rgba(244, 63, 94, 0.15)',
+          position: 'relative',
+          overflow: 'hidden'
         }}
       >
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '14px', marginBottom: '14px' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+        {/* Glowing Ambient Top Line */}
+        <div
+          style={{
+            position: 'absolute',
+            top: 0,
+            left: 0,
+            right: 0,
+            height: '4px',
+            background: 'linear-gradient(90deg, #e11d48 0%, #f97316 50%, #10b981 100%)'
+          }}
+        />
+
+        {/* Header row with GPS status beacon and action buttons */}
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '14px', marginBottom: '16px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
             <div
               style={{
-                width: '40px',
-                height: '40px',
-                borderRadius: '12px',
-                background: '#ffedd5',
+                width: '46px',
+                height: '46px',
+                borderRadius: '16px',
+                background: 'linear-gradient(135deg, #ea580c 0%, #f97316 100%)',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
-                color: '#ea580c'
+                color: 'white',
+                boxShadow: '0 6px 18px rgba(234, 88, 12, 0.35)'
               }}
             >
-              <Compass size={22} />
+              <Compass size={24} className="animate-spin-slow" />
             </div>
             <div>
-              <h3 style={{ margin: 0, fontSize: '1.12rem', fontWeight: 800, color: '#9a3412', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                <span>📍</span> {dict.gpsTitle}
-              </h3>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <h3 style={{ margin: 0, fontSize: '1.2rem', fontWeight: 900, color: '#9a3412' }}>
+                  📍 {dict.gpsTitle}
+                </h3>
+                <span
+                  style={{
+                    background: '#dcfce7',
+                    color: '#15803d',
+                    padding: '2px 10px',
+                    borderRadius: '12px',
+                    fontSize: '0.74rem',
+                    fontWeight: 800,
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: '5px',
+                    border: '1px solid #bbf7d0'
+                  }}
+                >
+                  <span style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#22c55e', display: 'inline-block' }}></span>
+                  {dict.gpsActiveBadge}
+                </span>
+              </div>
               <span style={{ fontSize: '0.82rem', color: '#c2410c', fontWeight: 600 }}>
                 {gpsStatusMessage}
               </span>
             </div>
           </div>
 
+          {/* Quick Refresh & Fix Buttons */}
           <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
             <button
               onClick={detectLiveGps}
               disabled={gpsLoading}
               style={{
-                background: '#ea580c',
+                background: 'linear-gradient(135deg, #ea580c 0%, #c2410c 100%)',
                 color: 'white',
                 border: 'none',
-                padding: '9px 18px',
-                borderRadius: '12px',
+                padding: '10px 18px',
+                borderRadius: '14px',
                 fontSize: '0.85rem',
-                fontWeight: 700,
+                fontWeight: 800,
                 cursor: 'pointer',
                 display: 'inline-flex',
                 alignItems: 'center',
                 gap: '8px',
-                boxShadow: '0 4px 12px rgba(234, 88, 12, 0.25)'
+                boxShadow: '0 4px 14px rgba(234, 88, 12, 0.28)'
               }}
             >
               <RefreshCw size={15} className={gpsLoading ? 'spin' : ''} />
@@ -1193,19 +1264,18 @@ export default function NearbyCare() {
             <button
               onClick={setNavalurLocation}
               style={{
-                background: '#059669',
+                background: 'linear-gradient(135deg, #059669 0%, #047857 100%)',
                 color: 'white',
                 border: 'none',
-                padding: '9px 18px',
-                borderRadius: '12px',
+                padding: '10px 18px',
+                borderRadius: '14px',
                 fontSize: '0.85rem',
-                fontWeight: 700,
+                fontWeight: 800,
                 cursor: 'pointer',
                 display: 'inline-flex',
                 alignItems: 'center',
                 gap: '8px',
-                boxShadow: '0 4px 12px rgba(5, 150, 105, 0.25)',
-                transition: 'all 0.2s ease'
+                boxShadow: '0 4px 14px rgba(5, 150, 105, 0.28)'
               }}
               title="Set directly to Navalur (OMR) / நாவலூர்"
             >
@@ -1215,71 +1285,132 @@ export default function NearbyCare() {
           </div>
         </div>
 
+        {/* PROMINENT LIVE ADDRESS DISPLAY (Glowing, High-Tech Card) */}
+        <div
+          style={{
+            background: 'white',
+            border: '2px solid #fdba74',
+            borderRadius: '16px',
+            padding: '16px 20px',
+            marginBottom: '14px',
+            boxShadow: '0 6px 20px rgba(249, 115, 22, 0.08)',
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            flexWrap: 'wrap',
+            gap: '14px'
+          }}
+        >
+          <div style={{ display: 'flex', alignItems: 'flex-start', gap: '12px', flex: 1, minWidth: '260px' }}>
+            <div
+              style={{
+                width: '36px',
+                height: '36px',
+                borderRadius: '12px',
+                background: '#fee2e2',
+                color: '#e11d48',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                flexShrink: 0,
+                marginTop: '2px'
+              }}
+            >
+              <MapPin size={20} />
+            </div>
+            <div>
+              <span style={{ fontSize: '0.74rem', textTransform: 'uppercase', color: '#9a3412', fontWeight: 800, letterSpacing: '0.04em', display: 'block' }}>
+                {language === 'ta' ? 'உங்கள் நேரடி ஜிபிஎஸ் முகவரி (Current Live Address):' : 'Your Live GPS Resolved Address:'}
+              </span>
+              <div style={{ fontSize: '1.05rem', fontWeight: 900, color: '#1e293b', marginTop: '3px', lineHeight: 1.35 }}>
+                {userLocation.fullAddress || userLocation.locality}
+              </div>
+            </div>
+          </div>
+
+          <div style={{ display: 'flex', gap: '8px' }}>
+            <button
+              onClick={() => handleCopyAddress('live-gps-addr', userLocation.fullAddress || userLocation.locality)}
+              style={{
+                background: copiedId === 'live-gps-addr' ? '#dcfce7' : '#f1f5f9',
+                color: copiedId === 'live-gps-addr' ? '#15803d' : '#334155',
+                border: '1px solid #cbd5e1',
+                borderRadius: '10px',
+                padding: '8px 14px',
+                fontSize: '0.8rem',
+                fontWeight: 700,
+                cursor: 'pointer',
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '6px'
+              }}
+            >
+              {copiedId === 'live-gps-addr' ? <Check size={14} /> : <Copy size={14} />}
+              <span>{copiedId === 'live-gps-addr' ? dict.copied : dict.copyAddress}</span>
+            </button>
+
+            <a
+              href={`https://maps.google.com/?q=${userLocation.lat},${userLocation.lng}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              style={{
+                background: 'linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)',
+                color: 'white',
+                textDecoration: 'none',
+                borderRadius: '10px',
+                padding: '8px 14px',
+                fontSize: '0.8rem',
+                fontWeight: 700,
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '6px',
+                boxShadow: '0 4px 12px rgba(37, 99, 235, 0.25)'
+              }}
+            >
+              <span>{dict.searchInMaps}</span>
+              <ExternalLink size={14} />
+            </a>
+          </div>
+        </div>
+
         {/* Live GPS Coordinates Details Grid */}
         <div
           style={{
             display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))',
+            gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
             gap: '12px',
-            background: '#fffaf5',
-            padding: '14px 18px',
+            background: 'rgba(255, 255, 255, 0.75)',
+            padding: '12px 16px',
             borderRadius: '14px',
-            border: '1px solid #ffedd5'
+            border: '1px solid #fed7aa'
           }}
         >
           <div>
-            <span style={{ fontSize: '0.74rem', color: '#9a3412', textTransform: 'uppercase', fontWeight: 700, letterSpacing: '0.04em' }}>
-              {dict.gpsLocality}
-            </span>
-            <div style={{ fontSize: '0.92rem', fontWeight: 800, color: '#1e293b', marginTop: '2px', display: 'flex', alignItems: 'center', gap: '6px' }}>
-              <MapPin size={16} color="#ea580c" />
-              <span>{userLocation.locality}</span>
-            </div>
-          </div>
-
-          <div>
-            <span style={{ fontSize: '0.74rem', color: '#9a3412', textTransform: 'uppercase', fontWeight: 700, letterSpacing: '0.04em' }}>
+            <span style={{ fontSize: '0.72rem', color: '#9a3412', textTransform: 'uppercase', fontWeight: 800 }}>
               {dict.gpsCoordinates}
             </span>
-            <div style={{ fontSize: '0.92rem', fontWeight: 700, color: '#334155', marginTop: '2px' }}>
+            <div style={{ fontSize: '0.88rem', fontWeight: 800, color: '#1e293b', marginTop: '2px' }}>
               {userLocation.lat.toFixed(5)}° N, {userLocation.lng.toFixed(5)}° E
             </div>
           </div>
 
           <div>
-            <span style={{ fontSize: '0.74rem', color: '#9a3412', textTransform: 'uppercase', fontWeight: 700, letterSpacing: '0.04em' }}>
+            <span style={{ fontSize: '0.72rem', color: '#9a3412', textTransform: 'uppercase', fontWeight: 800 }}>
               {dict.gpsAccuracy}
             </span>
-            <div style={{ fontSize: '0.92rem', fontWeight: 700, color: '#15803d', marginTop: '2px' }}>
+            <div style={{ fontSize: '0.88rem', fontWeight: 800, color: '#15803d', marginTop: '2px' }}>
               ±{userLocation.accuracy} meters (High Precision GPS)
             </div>
           </div>
-        </div>
 
-        {/* Quick Area Switch Chips */}
-        <div style={{ marginTop: '14px', display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
-          <span style={{ fontSize: '0.8rem', fontWeight: 700, color: '#7c2d12' }}>
-            {dict.gpsPresetSelect}
-          </span>
-          {PRESET_LOCALITIES.slice(0, 5).map((preset, i) => (
-            <button
-              key={i}
-              onClick={() => handlePresetChange(preset)}
-              style={{
-                background: userLocation.locality.includes(preset.name.split(' ')[0]) ? '#ea580c' : '#ffffff',
-                color: userLocation.locality.includes(preset.name.split(' ')[0]) ? '#ffffff' : '#475569',
-                border: '1px solid #fed7aa',
-                padding: '4px 12px',
-                borderRadius: '20px',
-                fontSize: '0.76rem',
-                fontWeight: 600,
-                cursor: 'pointer',
-                transition: 'all 0.15s ease'
-              }}
-            >
-              {preset.name.split(' ')[0]}
-            </button>
-          ))}
+          <div>
+            <span style={{ fontSize: '0.72rem', color: '#9a3412', textTransform: 'uppercase', fontWeight: 800 }}>
+              {language === 'ta' ? 'அருகிலுள்ள மருத்துவமனைகள்' : 'Surrounding Facilities'}
+            </span>
+            <div style={{ fontSize: '0.88rem', fontWeight: 800, color: '#e11d48', marginTop: '2px' }}>
+              {filteredHospitals.length} {dict.statHospitals} (Sorted by Distance)
+            </div>
+          </div>
         </div>
       </div>
 

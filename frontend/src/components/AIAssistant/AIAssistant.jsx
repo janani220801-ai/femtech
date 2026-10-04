@@ -1103,6 +1103,11 @@ export default function AIAssistant({ onOpenEmergency }) {
           <Send size={18} />
         </button>
       </div>
+
+      {/* Medical Disclaimer Banner in Chat Footer */}
+      <div style={{ marginTop: '12px', width: '100%' }}>
+        <DisclaimerBanner />
+      </div>
     </div>
   );
 }

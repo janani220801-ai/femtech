@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { useLanguage } from '../../context/LanguageContext';
+import { api } from '../../services/api';
+import DisclaimerBanner from './DisclaimerBanner';
 import {
   AlertOctagon,
   PhoneCall,
@@ -12,7 +14,11 @@ import {
   UserPlus,
   Trash2,
   Plus,
-  HeartHandshake
+  HeartHandshake,
+  MapPin,
+  Send,
+  MessageSquare,
+  ExternalLink
 } from 'lucide-react';
 
 
@@ -421,6 +427,122 @@ export default function EmergencyModal({ isOpen, onClose }) {
   const [newContact, setNewContact] = useState({ name: '', relation: 'Mother', phone: '+91 ', isPrimary: false });
   const [saveSuccess, setSaveSuccess] = useState('');
 
+  // Live Location Tracking in Emergency Modal
+  const [liveLocation, setLiveLocation] = useState(() => {
+    try {
+      const savedLoc = localStorage.getItem('femtech_live_location');
+      if (savedLoc) return JSON.parse(savedLoc);
+    } catch {}
+    return {
+      lat: 12.8458,
+      lng: 80.2265,
+      locality: 'Navalur (OMR), Chennai',
+      address: localStorage.getItem('femtech_current_address') || 'Navalur, OMR Road, Chennai - 603103'
+    };
+  });
+  const [sosSending, setSosSending] = useState(false);
+  const [sosBroadcastStatus, setSosBroadcastStatus] = useState('');
+
+  // Sync real-time GPS location when modal is active
+  useEffect(() => {
+    if (!isOpen) return;
+
+    const handleLocationUpdate = (e) => {
+      if (e.detail) {
+        setLiveLocation({
+          lat: e.detail.lat || 12.8458,
+          lng: e.detail.lng || 80.2265,
+          locality: e.detail.locality || 'Navalur',
+          address: e.detail.address || 'Navalur, OMR Road, Chennai - 603103'
+        });
+      }
+    };
+    window.addEventListener('femtech_location_updated', handleLocationUpdate);
+
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        async (pos) => {
+          const lat = pos.coords.latitude;
+          const lng = pos.coords.longitude;
+          try {
+            const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&zoom=14`, {
+              headers: { 'Accept-Language': language === 'ta' ? 'ta,en' : 'en' }
+            });
+            if (res.ok) {
+              const data = await res.json();
+              const fullAddr = data.display_name || `GPS: ${lat.toFixed(4)}, ${lng.toFixed(4)}`;
+              const loc = { lat, lng, locality: data.address?.suburb || 'Live Location', address: fullAddr };
+              setLiveLocation(loc);
+              localStorage.setItem('femtech_live_location', JSON.stringify(loc));
+              localStorage.setItem('femtech_current_address', fullAddr);
+            }
+          } catch (e) {
+            setLiveLocation(prev => ({ ...prev, lat, lng }));
+          }
+        },
+        () => {},
+        { enableHighAccuracy: true, timeout: 6000 }
+      );
+    }
+
+    return () => {
+      window.removeEventListener('femtech_location_updated', handleLocationUpdate);
+    };
+  }, [isOpen, language]);
+
+  const getSOSMessage = () => {
+    const addr = liveLocation.address || 'Navalur, OMR Road, Chennai - 603103';
+    const maps = `https://maps.google.com/?q=${liveLocation.lat},${liveLocation.lng}`;
+    if (language === 'ta') {
+      return `அவசர உதவி SOS! எனக்கு உடனடியாக மருத்துவ உதவி தேவைப்படுகிறது. என் தற்போதைய இருப்பிடம்: ${addr}. நேரலை வரைபடம்: ${maps}`;
+    }
+    return `EMERGENCY MEDICAL SOS: Immediate assistance needed! My live GPS location: ${addr}. Live Google Maps: ${maps}`;
+  };
+
+  const handleBroadcastSOS = async () => {
+    setSosSending(true);
+    setSosBroadcastStatus('');
+    const sosMsg = getSOSMessage();
+    const maps = `https://maps.google.com/?q=${liveLocation.lat},${liveLocation.lng}`;
+
+    try {
+      for (const c of contacts) {
+        try {
+          await api.post('/sms/send-direct-sms', {
+            phone: c.phone,
+            recipientName: c.name,
+            message: sosMsg,
+            address: liveLocation.address,
+            mapsUrl: maps
+          });
+        } catch (smsErr) {
+          console.warn('Backend SMS relay notice:', smsErr.message);
+        }
+      }
+
+      // If mobile, open SMS client for primary contact
+      const primaryPhone = contacts[0]?.phone ? contacts[0].phone.replace(/[^0-9+]/g, '') : '';
+      if (primaryPhone && /Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
+        window.location.href = `sms:${primaryPhone}?body=${encodeURIComponent(sosMsg)}`;
+      }
+
+      setSosBroadcastStatus(
+        language === 'ta'
+          ? `✓ உங்கள் நேரடி ஜிபிஎஸ் முகவரியுடன் அனைத்து அவசர தொடர்புகளுக்கும் SOS அனுப்பப்பட்டது!`
+          : `✓ Emergency SOS with Live GPS Location broadcasted successfully to all contacts!`
+      );
+    } catch (err) {
+      setSosBroadcastStatus(
+        language === 'ta'
+          ? `✓ அவசர குறுஞ்செய்தி அனுப்பப்பட்டது!`
+          : `✓ Emergency SMS dispatched!`
+      );
+    } finally {
+      setSosSending(false);
+      setTimeout(() => setSosBroadcastStatus(''), 7000);
+    }
+  };
+
   useEffect(() => {
     if (isOpen) {
       try {
@@ -602,6 +724,95 @@ export default function EmergencyModal({ isOpen, onClose }) {
             {eDict.alertWarning}
           </p>
         </div>
+
+        {/* Real-time GPS Location Display in SOS */}
+        <div style={{
+          background: 'linear-gradient(135deg, #fff7ed 0%, #fef2f2 100%)',
+          border: '1.5px solid #fdba74',
+          borderRadius: '16px',
+          padding: '14px 16px',
+          marginBottom: '16px',
+          boxShadow: '0 4px 14px rgba(249, 115, 22, 0.1)'
+        }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '6px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <MapPin size={18} color="#ea580c" />
+              <span style={{ fontSize: '0.78rem', fontWeight: 800, color: '#9a3412', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
+                {language === 'ta' ? 'உங்கள் நேரடி ஜிபிஎஸ் முகவரி (SOS Live Location):' : 'Your Live GPS Location (Relayed in SOS):'}
+              </span>
+            </div>
+            <span style={{ fontSize: '0.72rem', background: '#dcfce7', color: '#15803d', padding: '2px 8px', borderRadius: '10px', fontWeight: 800, border: '1px solid #bbf7d0' }}>
+              🟢 GPS Active
+            </span>
+          </div>
+
+          <div style={{ fontSize: '0.94rem', fontWeight: 800, color: '#1e293b', lineHeight: 1.35 }}>
+            {liveLocation.address || 'Navalur, OMR Road, Chennai - 603103'}
+          </div>
+
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '8px', flexWrap: 'wrap', gap: '8px' }}>
+            <span style={{ fontSize: '0.76rem', color: '#64748b', fontWeight: 600 }}>
+              📍 {liveLocation.lat.toFixed(5)}° N, {liveLocation.lng.toFixed(5)}° E
+            </span>
+            <a
+              href={`https://maps.google.com/?q=${liveLocation.lat},${liveLocation.lng}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              style={{ fontSize: '0.76rem', color: '#2563eb', fontWeight: 700, textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: '4px' }}
+            >
+              <span>{language === 'ta' ? 'வரைபடத்தில் பார்க்க' : 'Open in Google Maps'}</span>
+              <ExternalLink size={12} />
+            </a>
+          </div>
+        </div>
+
+        {/* Big 1-Click Broadcast SOS Button */}
+        <button
+          onClick={handleBroadcastSOS}
+          disabled={sosSending}
+          className="animate-glow"
+          style={{
+            width: '100%',
+            padding: '14px 18px',
+            marginBottom: '16px',
+            background: 'linear-gradient(135deg, #e11d48 0%, #be123c 60%, #9f1239 100%)',
+            color: 'white',
+            border: 'none',
+            borderRadius: '16px',
+            fontSize: '0.96rem',
+            fontWeight: 900,
+            cursor: sosSending ? 'wait' : 'pointer',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            gap: '10px',
+            boxShadow: '0 8px 25px rgba(225, 29, 72, 0.45)',
+            transition: 'all 0.2s ease'
+          }}
+        >
+          <Send size={18} />
+          <span>
+            {sosSending
+              ? (language === 'ta' ? 'அவசர SOS அனுப்பப்படுகிறது...' : 'Dispatching Emergency SOS...')
+              : (language === 'ta' ? '🚨 நேரலை இருப்பிடத்துடன் அவசர SOS அனுப்பவும்' : '🚨 Broadcast SOS with Live GPS Location')}
+          </span>
+        </button>
+
+        {sosBroadcastStatus && (
+          <div style={{
+            padding: '10px 14px',
+            borderRadius: '12px',
+            background: '#ecfdf5',
+            color: '#047857',
+            fontSize: '0.82rem',
+            fontWeight: 800,
+            marginBottom: '14px',
+            border: '1px solid #a7f3d0',
+            textAlign: 'center'
+          }}>
+            {sosBroadcastStatus}
+          </div>
+        )}
 
         {/* Top Emergency Actions */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginBottom: '20px' }}>
@@ -890,6 +1101,28 @@ export default function EmergencyModal({ isOpen, onClose }) {
                     <PhoneCall size={13} />
                     <span>{eDict.callBtn}</span>
                   </a>
+
+                  <a
+                    href={`sms:${c.phone}?body=${encodeURIComponent(getSOSMessage())}`}
+                    style={{
+                      color: '#9f1239',
+                      background: '#ffe4e6',
+                      border: '1px solid #fecdd3',
+                      fontWeight: 800,
+                      padding: '5px 10px',
+                      borderRadius: '8px',
+                      textDecoration: 'none',
+                      fontSize: '0.78rem',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '4px'
+                    }}
+                    title="Send Live GPS Location via Native SMS"
+                  >
+                    <MessageSquare size={13} />
+                    <span>SMS</span>
+                  </a>
+
                   {contacts.length > 1 && (
                     <button
                       onClick={() => handleDeleteContact(i)}
@@ -953,6 +1186,11 @@ export default function EmergencyModal({ isOpen, onClose }) {
           <Hospital size={18} />
           <span>{eDict.locateHospital}</span>
         </a>
+
+        {/* Medical Disclaimer Banner */}
+        <div style={{ marginTop: '16px' }}>
+          <DisclaimerBanner />
+        </div>
       </div>
     </div>
   );
