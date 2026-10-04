@@ -334,8 +334,8 @@ export default function CycleTracker() {
   const [loading, setLoading] = useState(true);
   const [showLogModal, setShowLogModal] = useState(false);
 
-  // Calendar State
-  const [calendarDate, setCalendarDate] = useState(new Date(2026, 8, 1)); // Sept 2026
+  // Calendar State initialized to current date
+  const [calendarDate, setCalendarDate] = useState(() => new Date());
 
   // Form State
   const [formData, setFormData] = useState({
@@ -406,6 +406,20 @@ export default function CycleTracker() {
     }
   };
 
+  // Dynamic Cycle, Ovulation & Flow calculations
+  const nextPeriodDateObj = latest?.estimatedNextPeriod ? new Date(latest.estimatedNextPeriod) : new Date(2026, 9, 8);
+  const ovulationDateObj = new Date(nextPeriodDateObj);
+  ovulationDateObj.setDate(nextPeriodDateObj.getDate() - 14);
+
+  const fertileStartObj = new Date(ovulationDateObj);
+  fertileStartObj.setDate(ovulationDateObj.getDate() - 4);
+  const fertileEndObj = new Date(ovulationDateObj);
+  fertileEndObj.setDate(ovulationDateObj.getDate() + 1);
+
+  const avgCycleDays = latest?.cycleLength || formData.cycleLength || 28;
+  const avgPeriodDays = latest?.periodDuration || formData.periodDuration || 5;
+  const currentFlow = formData.flowLevel || latest?.flowLevel || 'medium';
+
   // Calendar rendering helpers
   const year = calendarDate.getFullYear();
   const month = calendarDate.getMonth();
@@ -414,13 +428,43 @@ export default function CycleTracker() {
   const totalDays = new Date(year, month + 1, 0).getDate();
 
   const getDayStatus = (day) => {
-    if (month === 8) { // September
-      if (day >= 10 && day <= 14) return 'period';
-      if (day === 9 || day === 15) return 'symptoms';
-      if (day === 24) return 'wellness';
-    } else if (month === 9) { // October
-      if (day >= 8 && day <= 12) return 'predicted';
+    const d = new Date(year, month, day);
+    d.setHours(0, 0, 0, 0);
+
+    // 1. Check logged period days
+    if (latest?.startDate) {
+      const pStart = new Date(latest.startDate);
+      pStart.setHours(0, 0, 0, 0);
+      const pEnd = new Date(pStart);
+      pEnd.setDate(pStart.getDate() + (latest.periodDuration || avgPeriodDays) - 1);
+      if (d >= pStart && d <= pEnd) return 'period';
+    } else if (month === 8 && day >= 10 && day <= 14) {
+      return 'period';
     }
+
+    // 2. Expected Next Period Days
+    const nextStart = new Date(nextPeriodDateObj);
+    nextStart.setHours(0, 0, 0, 0);
+    const nextEnd = new Date(nextStart);
+    nextEnd.setDate(nextStart.getDate() + avgPeriodDays - 1);
+    if (d >= nextStart && d <= nextEnd) return 'predicted';
+
+    // 3. Expected Ovulation Day (14 days before next period)
+    const ovDay = new Date(ovulationDateObj);
+    ovDay.setHours(0, 0, 0, 0);
+    if (d.getTime() === ovDay.getTime()) return 'ovulation';
+
+    // 4. Fertile Window (4 days before ovulation to 1 day after)
+    const fStart = new Date(fertileStartObj);
+    fStart.setHours(0, 0, 0, 0);
+    const fEnd = new Date(fertileEndObj);
+    fEnd.setHours(0, 0, 0, 0);
+    if (d >= fStart && d <= fEnd) return 'fertile';
+
+    // Baseline indicators for demo
+    if (month === 8 && (day === 9 || day === 15)) return 'symptoms';
+    if (month === 8 && day === 24) return 'wellness';
+
     return null;
   };
 
@@ -567,55 +611,189 @@ export default function CycleTracker() {
 
       <DisclaimerBanner customText={t('cycleDisclaimer')} />
 
-      {/* Cycle Statistics Summary Cards */}
+      {/* 1. Cycle Statistics & Flow Indicator Cards (4 Responsive Cards) */}
       <div style={{
         display: 'grid',
-        gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))',
+        gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))',
         gap: '16px',
-        marginBottom: '28px'
+        marginBottom: '24px'
       }}>
-        <div className="glass-card" style={{ padding: '20px', textAlign: 'center' }}>
-          <div style={{ fontSize: '0.78rem', color: 'var(--text-muted)', textTransform: 'uppercase' }}>{t('currentCycleDay')}</div>
-          <div style={{ fontSize: '2.4rem', fontWeight: 800, color: 'var(--rose-primary)', margin: '4px 0' }}>
+        {/* Card 1: Current Cycle Day */}
+        <div className="glass-card card-interactive" style={{ padding: '20px', textAlign: 'center', borderRadius: '18px' }}>
+          <div style={{ fontSize: '0.78rem', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: 700 }}>
+            {t('currentCycleDay')}
+          </div>
+          <div style={{ fontSize: '2.3rem', fontWeight: 800, color: 'var(--rose-primary)', margin: '4px 0' }}>
             {t('day')} {currentCycleDay}
           </div>
-          <div style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>{t('phaseFollicular')}</div>
+          <div style={{ fontSize: '0.82rem', color: 'var(--text-secondary)', fontWeight: 600 }}>
+            {t('phaseFollicular')}
+          </div>
         </div>
 
-        <div className="glass-card" style={{ padding: '20px', textAlign: 'center' }}>
-          <div style={{ fontSize: '0.78rem', color: 'var(--text-muted)', textTransform: 'uppercase' }}>{t('estimatedNext')}</div>
-          <div style={{ fontSize: '2rem', fontWeight: 800, color: 'var(--rose-primary)', margin: '4px 0' }}>
+        {/* Card 2: Estimated Next Period */}
+        <div className="glass-card card-interactive" style={{ padding: '20px', textAlign: 'center', borderRadius: '18px' }}>
+          <div style={{ fontSize: '0.78rem', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: 700 }}>
+            {language === 'ta' ? 'அடுத்த மாதவிடாய்' : 'Expected Next Period'}
+          </div>
+          <div style={{ fontSize: '2.1rem', fontWeight: 800, color: '#be123c', margin: '4px 0' }}>
             {daysUntilNext} {t('days')}
           </div>
-          <div style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>
-            {t('estimatedNext')}: {latest?.estimatedNextPeriod ? new Date(latest.estimatedNextPeriod).toLocaleDateString() : 'Oct 08, 2026'}
+          <div style={{ fontSize: '0.82rem', color: '#9f1239', fontWeight: 600 }}>
+            📅 {nextPeriodDateObj.toLocaleDateString(language === 'ta' ? 'ta-IN' : 'en-US', { day: 'numeric', month: 'short', year: 'numeric' })}
           </div>
         </div>
 
-        <div className="glass-card" style={{ padding: '20px', textAlign: 'center' }}>
-          <div style={{ fontSize: '0.78rem', color: 'var(--text-muted)', textTransform: 'uppercase' }}>{t('menstrualCycle')}</div>
-          <div style={{ fontSize: '1.6rem', fontWeight: 800, color: '#059669', margin: '8px 0' }}>
-            {t('regular')} (28 d)
+        {/* Card 3: Cycle Pattern (Average Cycle Days & Period Length) */}
+        <div className="glass-card card-interactive" style={{ padding: '20px', textAlign: 'center', borderRadius: '18px' }}>
+          <div style={{ fontSize: '0.78rem', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: 700 }}>
+            {language === 'ta' ? 'சுழற்சி மாதிரி (Cycle Pattern)' : 'Cycle Pattern & Averages'}
           </div>
-          <div style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>21-35 {t('days')}</div>
+          <div style={{ fontSize: '1.6rem', fontWeight: 800, color: '#059669', margin: '6px 0' }}>
+            {avgCycleDays} {t('days')} • {avgPeriodDays} {language === 'ta' ? 'நாட்கள்' : 'days'}
+          </div>
+          <div style={{ fontSize: '0.8rem', color: '#065f46', fontWeight: 600 }}>
+            ✓ {language === 'ta' ? 'சராசரி சுழற்சி (Regular 21-35 d)' : 'Regular Cycle (Normal Range)'}
+          </div>
+        </div>
+
+        {/* Card 4: Flow Indicator (Heavy / Moderate / Normal-Light / Spotting) */}
+        <div className="glass-card card-interactive" style={{ padding: '20px', textAlign: 'center', borderRadius: '18px', border: '1.5px solid #fecdd3' }}>
+          <div style={{ fontSize: '0.78rem', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: 700 }}>
+            {language === 'ta' ? 'இரத்தப்போக்கு அளவு (Flow Indicator)' : 'Current Flow Indicator'}
+          </div>
+          <div style={{ fontSize: '1.45rem', fontWeight: 800, color: currentFlow === 'heavy' ? '#dc2626' : currentFlow === 'medium' ? '#ea580c' : '#db2777', margin: '4px 0', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px' }}>
+            <span>{currentFlow === 'heavy' ? '💧💧💧' : currentFlow === 'medium' ? '💧💧' : currentFlow === 'light' ? '💧' : '🌸'}</span>
+            <span>
+              {currentFlow === 'heavy'
+                ? (language === 'ta' ? 'அதிகம் (Heavy)' : 'Heavy Flow')
+                : currentFlow === 'medium'
+                ? (language === 'ta' ? 'நடுத்தரம் (Moderate)' : 'Moderate Flow')
+                : currentFlow === 'light'
+                ? (language === 'ta' ? 'சீரான / குறைவு (Normal)' : 'Normal / Light')
+                : (language === 'ta' ? 'புள்ளிகள் (Spotting)' : 'Spotting')}
+            </span>
+          </div>
+          <div style={{ display: 'flex', justifyContent: 'center', gap: '4px', marginTop: '6px', flexWrap: 'wrap' }}>
+            {[
+              { id: 'heavy', label: language === 'ta' ? 'அதிகம்' : 'Heavy', color: '#fee2e2', text: '#dc2626' },
+              { id: 'medium', label: language === 'ta' ? 'நடுத்தரம்' : 'Moderate', color: '#ffedd5', text: '#ea580c' },
+              { id: 'light', label: language === 'ta' ? 'சீரானது' : 'Normal', color: '#fce7f3', text: '#be185d' }
+            ].map(f => (
+              <button
+                key={f.id}
+                type="button"
+                onClick={() => setFormData(prev => ({ ...prev, flowLevel: f.id }))}
+                style={{
+                  background: currentFlow === f.id ? f.text : f.color,
+                  color: currentFlow === f.id ? '#ffffff' : f.text,
+                  border: 'none',
+                  borderRadius: '12px',
+                  padding: '3px 8px',
+                  fontSize: '0.72rem',
+                  fontWeight: 700,
+                  cursor: 'pointer'
+                }}
+              >
+                {f.label}
+              </button>
+            ))}
+          </div>
         </div>
       </div>
 
-      {/* MONTHLY CALENDAR WITH COLOR SYSTEM */}
-      <div className="glass-card" style={{ padding: '28px', borderRadius: 'var(--radius-lg)', marginBottom: '32px' }}>
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '20px' }}>
-          <h2 style={{ fontSize: '1.3rem', color: 'var(--navy-dark)' }}>
-            {new Date(year, month, 1).toLocaleDateString(
-              language === 'ta' ? 'ta-IN' : language === 'hi' ? 'hi-IN' : language === 'te' ? 'te-IN' : language === 'mr' ? 'mr-IN' : language === 'ml' ? 'ml-IN' : language === 'fr' ? 'fr-FR' : (language === 'ar' || language === 'lb') ? 'ar-EG' : 'en-US',
-              { month: 'long', year: 'numeric' }
-            )}
-          </h2>
+      {/* 2. CYCLE PATTERN & HEALTH SUMMARY BAR */}
+      <div
+        className="glass-card"
+        style={{
+          padding: '18px 22px',
+          borderRadius: '18px',
+          background: 'linear-gradient(135deg, #fdf2f8 0%, #eff6ff 100%)',
+          marginBottom: '26px',
+          border: '1.5px solid #fbcfe8',
+          display: 'grid',
+          gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
+          gap: '14px',
+          alignItems: 'center'
+        }}
+      >
+        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+          <span style={{ fontSize: '1.5rem' }}>🔄</span>
+          <div>
+            <div style={{ fontSize: '0.72rem', fontWeight: 800, color: '#831843', textTransform: 'uppercase' }}>
+              {language === 'ta' ? 'சராசரி சுழற்சி நாட்கள்' : 'Average Cycle Days'}
+            </div>
+            <div style={{ fontSize: '1.15rem', fontWeight: 800, color: '#9d174d' }}>
+              {avgCycleDays} {language === 'ta' ? 'நாட்கள் (Days)' : 'Days'}
+            </div>
+          </div>
+        </div>
 
-          <div style={{ display: 'flex', gap: '8px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+          <span style={{ fontSize: '1.5rem' }}>🩸</span>
+          <div>
+            <div style={{ fontSize: '0.72rem', fontWeight: 800, color: '#831843', textTransform: 'uppercase' }}>
+              {language === 'ta' ? 'மாதவிடாய் காலம் (நீளம்)' : 'Period Length (Duration)'}
+            </div>
+            <div style={{ fontSize: '1.15rem', fontWeight: 800, color: '#9d174d' }}>
+              {avgPeriodDays} {language === 'ta' ? 'நாட்கள் (Days)' : 'Days'}
+            </div>
+          </div>
+        </div>
+
+        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+          <span style={{ fontSize: '1.5rem' }}>🥚</span>
+          <div>
+            <div style={{ fontSize: '0.72rem', fontWeight: 800, color: '#b45309', textTransform: 'uppercase' }}>
+              {language === 'ta' ? 'அடுத்த அண்டவிடுப்பு (Ovulation)' : 'Expected Ovulation Date'}
+            </div>
+            <div style={{ fontSize: '1.1rem', fontWeight: 800, color: '#d97706' }}>
+              {ovulationDateObj.toLocaleDateString(language === 'ta' ? 'ta-IN' : 'en-US', { day: 'numeric', month: 'short' })}
+            </div>
+          </div>
+        </div>
+
+        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+          <span style={{ fontSize: '1.5rem' }}>🌿</span>
+          <div>
+            <div style={{ fontSize: '0.72rem', fontWeight: 800, color: '#166534', textTransform: 'uppercase' }}>
+              {language === 'ta' ? 'கருத்தரிக்கும் காலம் (Fertile Window)' : 'Estimated Fertile Window'}
+            </div>
+            <div style={{ fontSize: '1.05rem', fontWeight: 800, color: '#15803d' }}>
+              {fertileStartObj.toLocaleDateString(language === 'ta' ? 'ta-IN' : 'en-US', { day: 'numeric', month: 'short' })} – {fertileEndObj.toLocaleDateString(language === 'ta' ? 'ta-IN' : 'en-US', { day: 'numeric', month: 'short' })}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* 3. MONTHLY CALENDAR (OPTIMIZED FOR MOBILE & DESKTOP) */}
+      <div className="glass-card" style={{ padding: '24px 18px', borderRadius: 'var(--radius-lg)', marginBottom: '32px', border: '1px solid #fecdd3' }}>
+        
+        {/* Calendar Header with Navigation & Quick 'Today' button */}
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '18px', flexWrap: 'wrap', gap: '12px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+            <CalendarHeart size={24} color="#e11d48" />
+            <h2 style={{ fontSize: '1.35rem', fontWeight: 800, color: 'var(--navy-dark)', margin: 0 }}>
+              {new Date(year, month, 1).toLocaleDateString(
+                language === 'ta' ? 'ta-IN' : language === 'hi' ? 'hi-IN' : language === 'te' ? 'te-IN' : language === 'mr' ? 'mr-IN' : language === 'ml' ? 'ml-IN' : language === 'fr' ? 'fr-FR' : (language === 'ar' || language === 'lb') ? 'ar-EG' : 'en-US',
+                { month: 'long', year: 'numeric' }
+              )}
+            </h2>
+          </div>
+
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <button
+              onClick={() => setCalendarDate(new Date())}
+              className="btn-secondary"
+              style={{ padding: '6px 12px', fontSize: '0.78rem', fontWeight: 700 }}
+            >
+              {language === 'ta' ? 'இன்று (Today)' : 'Today'}
+            </button>
             <button
               onClick={() => setCalendarDate(new Date(year, month - 1, 1))}
               className="btn-secondary"
               style={{ padding: '6px 12px' }}
+              title="Previous Month"
             >
               <ChevronLeft size={16} />
             </button>
@@ -623,9 +801,58 @@ export default function CycleTracker() {
               onClick={() => setCalendarDate(new Date(year, month + 1, 1))}
               className="btn-secondary"
               style={{ padding: '6px 12px' }}
+              title="Next Month"
             >
               <ChevronRight size={16} />
             </button>
+          </div>
+        </div>
+
+        {/* Highlighted Expected Dates Quick Bar */}
+        <div style={{
+          display: 'grid',
+          gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))',
+          gap: '10px',
+          padding: '12px 14px',
+          background: 'linear-gradient(135deg, #fff1f2 0%, #fdf2f8 100%)',
+          borderRadius: '12px',
+          marginBottom: '18px',
+          border: '1px solid #fecdd3'
+        }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <span style={{ fontSize: '1.2rem' }}>🔮</span>
+            <div>
+              <div style={{ fontSize: '0.7rem', color: '#881337', fontWeight: 700, textTransform: 'uppercase' }}>
+                {language === 'ta' ? 'எதிர்பார்க்கப்படும் அடுத்த மாதவிடாய்' : 'Expected Period Date'}
+              </div>
+              <div style={{ fontSize: '0.92rem', fontWeight: 800, color: '#be123c' }}>
+                {nextPeriodDateObj.toLocaleDateString(language === 'ta' ? 'ta-IN' : 'en-US', { day: 'numeric', month: 'short', year: 'numeric' })}
+              </div>
+            </div>
+          </div>
+
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <span style={{ fontSize: '1.2rem' }}>🥚</span>
+            <div>
+              <div style={{ fontSize: '0.7rem', color: '#78350f', fontWeight: 700, textTransform: 'uppercase' }}>
+                {language === 'ta' ? 'எதிர்பார்க்கப்படும் கருமுட்டை நாள்' : 'Expected Ovulation Date'}
+              </div>
+              <div style={{ fontSize: '0.92rem', fontWeight: 800, color: '#d97706' }}>
+                {ovulationDateObj.toLocaleDateString(language === 'ta' ? 'ta-IN' : 'en-US', { day: 'numeric', month: 'short', year: 'numeric' })}
+              </div>
+            </div>
+          </div>
+
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <span style={{ fontSize: '1.2rem' }}>🌿</span>
+            <div>
+              <div style={{ fontSize: '0.7rem', color: '#14532d', fontWeight: 700, textTransform: 'uppercase' }}>
+                {language === 'ta' ? 'கருத்தரிக்கும் காலம்' : 'Fertile Window'}
+              </div>
+              <div style={{ fontSize: '0.92rem', fontWeight: 800, color: '#15803d' }}>
+                {fertileStartObj.toLocaleDateString(language === 'ta' ? 'ta-IN' : 'en-US', { day: 'numeric', month: 'short' })} – {fertileEndObj.toLocaleDateString(language === 'ta' ? 'ta-IN' : 'en-US', { day: 'numeric', month: 'short' })}
+              </div>
+            </div>
           </div>
         </div>
 
@@ -633,102 +860,135 @@ export default function CycleTracker() {
         <div style={{
           display: 'flex',
           flexWrap: 'wrap',
-          gap: '16px',
-          padding: '12px 16px',
-          background: 'var(--pink-50)',
+          gap: '12px',
+          padding: '10px 14px',
+          background: '#f8fafc',
           borderRadius: 'var(--radius-md)',
-          marginBottom: '20px',
-          fontSize: '0.82rem',
-          fontWeight: 600
+          marginBottom: '16px',
+          fontSize: '0.78rem',
+          fontWeight: 700,
+          border: '1px solid #e2e8f0'
         }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-            <span style={{ width: '14px', height: '14px', borderRadius: '4px', background: '#fb7185' }} />
-            <span>{t('periodLegendPink') || 'Pink = Period Days'}</span>
+            <span style={{ width: '12px', height: '12px', borderRadius: '3px', background: '#fb7185' }} />
+            <span>{language === 'ta' ? '🩸 மாதவிடாய் நாட்கள்' : 'Pink = Logged Period'}</span>
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-            <span style={{ width: '14px', height: '14px', borderRadius: '4px', background: '#c4b5fd' }} />
-            <span>{t('periodLegendLavender') || 'Lavender = Estimated Period Days'}</span>
+            <span style={{ width: '12px', height: '12px', borderRadius: '3px', background: '#c4b5fd' }} />
+            <span>{language === 'ta' ? '🔮 கணிக்கப்பட்ட மாதவிடாய்' : 'Lavender = Estimated Period'}</span>
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-            <span style={{ width: '14px', height: '14px', borderRadius: '4px', background: '#f87171' }} />
-            <span>{t('periodLegendRed') || 'Light Red = Symptoms Logged'}</span>
+            <span style={{ width: '12px', height: '12px', borderRadius: '3px', background: '#fcd34d' }} />
+            <span>{language === 'ta' ? '🥚 கருமுட்டை நாள் (Ovulation)' : 'Gold = Ovulation Day'}</span>
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-            <span style={{ width: '14px', height: '14px', borderRadius: '4px', background: '#818cf8' }} />
-            <span>{t('periodLegendBlue') || 'Blue/Purple = Wellness Logs'}</span>
+            <span style={{ width: '12px', height: '12px', borderRadius: '3px', background: '#86efac' }} />
+            <span>{language === 'ta' ? '🌿 கருத்தரிக்கும் காலம்' : 'Green = Fertile Window'}</span>
+          </div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+            <span style={{ width: '12px', height: '12px', borderRadius: '3px', background: '#f87171' }} />
+            <span>{language === 'ta' ? '💊 அறிகுறிகள்' : 'Coral = Symptoms'}</span>
           </div>
         </div>
 
-        {/* Day Grid Header */}
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', textAlign: 'center', fontWeight: 700, fontSize: '0.85rem', color: 'var(--text-muted)', marginBottom: '8px' }}>
-          {weekdays.map((w) => (
-            <div key={w}>{w}</div>
-          ))}
-        </div>
+        {/* Mobile-Friendly Calendar Scroll Container */}
+        <div style={{ width: '100%', overflowX: 'auto', WebkitOverflowScrolling: 'touch' }}>
+          <div style={{ minWidth: '320px' }}>
+            {/* Day Grid Header */}
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', textAlign: 'center', fontWeight: 800, fontSize: '0.82rem', color: 'var(--text-muted)', marginBottom: '8px' }}>
+              {weekdays.map((w) => (
+                <div key={w}>{w}</div>
+              ))}
+            </div>
 
-        {/* Calendar Days */}
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: '6px' }}>
-          {Array.from({ length: firstDayIndex }).map((_, i) => (
-            <div key={`empty-${i}`} style={{ height: '70px', borderRadius: '8px', background: 'rgba(0,0,0,0.02)' }} />
-          ))}
+            {/* Calendar Days Grid */}
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: '6px' }}>
+              {Array.from({ length: firstDayIndex }).map((_, i) => (
+                <div key={`empty-${i}`} style={{ minHeight: '62px', borderRadius: '8px', background: 'rgba(0,0,0,0.02)' }} />
+              ))}
 
-          {Array.from({ length: totalDays }).map((_, i) => {
-            const dayNum = i + 1;
-            const status = getDayStatus(dayNum);
+              {Array.from({ length: totalDays }).map((_, i) => {
+                const dayNum = i + 1;
+                const status = getDayStatus(dayNum);
 
-            let bg = 'white';
-            let textColor = 'var(--text-primary)';
-            let label = null;
+                let bg = 'white';
+                let textColor = 'var(--text-primary)';
+                let label = null;
+                let badgeIcon = null;
 
-            if (status === 'period') {
-              bg = '#ffe4e6';
-              textColor = '#e11d48';
-              label = cDict.status.period;
-            } else if (status === 'predicted') {
-              bg = '#f5f3ff';
-              textColor = '#7c3aed';
-              label = cDict.status.predicted;
-            } else if (status === 'symptoms') {
-              bg = '#fef2f2';
-              textColor = '#dc2626';
-              label = cDict.status.symptoms;
-            } else if (status === 'wellness') {
-              bg = '#eff6ff';
-              textColor = '#2563eb';
-              label = cDict.status.wellness;
-            }
+                if (status === 'period') {
+                  bg = '#ffe4e6';
+                  textColor = '#e11d48';
+                  label = cDict.status.period;
+                  badgeIcon = '🩸';
+                } else if (status === 'predicted') {
+                  bg = '#f5f3ff';
+                  textColor = '#7c3aed';
+                  label = cDict.status.predicted;
+                  badgeIcon = '🔮';
+                } else if (status === 'ovulation') {
+                  bg = '#fef3c7';
+                  textColor = '#b45309';
+                  label = language === 'ta' ? 'அண்டவிடுப்பு' : 'Ovulation';
+                  badgeIcon = '🥚';
+                } else if (status === 'fertile') {
+                  bg = '#f0fdf4';
+                  textColor = '#15803d';
+                  label = language === 'ta' ? 'கருத்தரிப்பு' : 'Fertile';
+                  badgeIcon = '🌿';
+                } else if (status === 'symptoms') {
+                  bg = '#fef2f2';
+                  textColor = '#dc2626';
+                  label = cDict.status.symptoms;
+                  badgeIcon = '💊';
+                } else if (status === 'wellness') {
+                  bg = '#eff6ff';
+                  textColor = '#2563eb';
+                  label = cDict.status.wellness;
+                  badgeIcon = '✨';
+                }
 
-            return (
-              <div
-                key={`day-${dayNum}`}
-                style={{
-                  height: '70px',
-                  borderRadius: '8px',
-                  background: bg,
-                  border: status ? '1px solid currentColor' : '1px solid #f1f5f9',
-                  padding: '6px',
-                  display: 'flex',
-                  flexDirection: 'column',
-                  justifyContent: 'space-between',
-                  transition: 'var(--transition)'
-                }}
-              >
-                <span style={{ fontWeight: 700, fontSize: '0.88rem', color: textColor }}>{dayNum}</span>
-                {label && (
-                  <span style={{
-                    fontSize: '0.68rem',
-                    fontWeight: 700,
-                    color: textColor,
-                    background: 'rgba(255,255,255,0.7)',
-                    padding: '2px 4px',
-                    borderRadius: '4px'
-                  }}>
-                    {label}
-                  </span>
-                )}
-              </div>
-            );
-          })}
+                return (
+                  <div
+                    key={`day-${dayNum}`}
+                    style={{
+                      minHeight: '62px',
+                      borderRadius: '8px',
+                      background: bg,
+                      border: status ? '1.5px solid currentColor' : '1px solid #f1f5f9',
+                      padding: '4px',
+                      display: 'flex',
+                      flexDirection: 'column',
+                      justifyContent: 'space-between',
+                      transition: 'all 0.15s ease',
+                      boxSizing: 'border-box'
+                    }}
+                  >
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                      <span style={{ fontWeight: 800, fontSize: '0.84rem', color: textColor }}>{dayNum}</span>
+                      {badgeIcon && <span style={{ fontSize: '0.72rem' }}>{badgeIcon}</span>}
+                    </div>
+                    {label && (
+                      <span style={{
+                        fontSize: '0.62rem',
+                        fontWeight: 700,
+                        color: textColor,
+                        background: 'rgba(255,255,255,0.85)',
+                        padding: '1px 3px',
+                        borderRadius: '3px',
+                        whiteSpace: 'nowrap',
+                        overflow: 'hidden',
+                        textOverflow: 'ellipsis',
+                        display: 'block'
+                      }}>
+                        {label}
+                      </span>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          </div>
         </div>
       </div>
 
@@ -890,6 +1150,15 @@ export default function CycleTracker() {
       )}
         </>
       )}
+
+      {/* Universal Medical Disclaimer at the bottom of the page */}
+      <div style={{ marginTop: '36px' }}>
+        <DisclaimerBanner customText={
+          language === 'ta'
+            ? '⚠️ மருத்துவ மறுப்பு: இந்த தளம் மற்றும் சுழற்சி கணிப்புகள் தகவல் நோக்கங்களுக்காக மட்டுமே. இது தொழில்முறை மருத்துவ ஆலோசனை, நோய் கண்டறிதல் அல்லது சிகிச்சைக்கு மாற்றாகாது (Not a substitute for professional medical advice). ஏதேனும் அசாதாரண இரத்தப்போக்கு, தீவிர வலி அல்லது சுழற்சி தாமதம் இருப்பின், தகுதிவாய்ந்த மகளிர் மருத்துவரை அணுகவும்.'
+            : '⚠️ Medical Disclaimer: This platform and its cycle predictions are for informational tracking purposes and are not a substitute for professional medical advice, clinical diagnosis, or treatment. Always consult a qualified gynecologist or healthcare provider.'
+        } />
+      </div>
     </div>
   );
 }

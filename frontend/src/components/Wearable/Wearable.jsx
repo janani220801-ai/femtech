@@ -807,7 +807,7 @@ export default function Wearable() {
       {isConnected ? (
         <>
           <span style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', color: '#059669' }}>
-            <span style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#10b981', display: 'inline-block' }} className="animate-glow" />
+            <span style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#10b981', display: 'inline-block' }} className="animate-radar-ping" />
             {t('btConnectedLive')}
           </span>
           <span style={{ fontSize: '0.68rem', color: '#047857', background: '#dcfce7', padding: '1px 6px', borderRadius: '4px', fontWeight: 700 }}>
@@ -897,10 +897,10 @@ export default function Wearable() {
           <button
             onClick={connectBluetooth}
             disabled={connecting}
-            className="btn-primary"
+            className="btn-primary card-interactive"
             style={{ padding: '12px 24px', display: 'flex', alignItems: 'center', gap: '8px' }}
           >
-            <Bluetooth size={18} />
+            <Bluetooth size={18} className={connecting ? "animate-spin" : isConnected ? "animate-radar-ping" : ""} />
             <span>
               {connecting ? t('scanningBLE') : isConnected ? t('disconnectBLE') : t('connectBLE')}
             </span>
@@ -919,7 +919,7 @@ export default function Wearable() {
         }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '12px', marginBottom: '14px' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-              <Bluetooth size={22} color={isConnected ? '#059669' : '#dc2626'} />
+              <Bluetooth size={22} color={isConnected ? '#059669' : '#dc2626'} className={isConnected ? "animate-radar-ping" : ""} />
               <div>
                 <h3 style={{ fontSize: '1.05rem', margin: 0, color: isConnected ? '#065f46' : '#991b1b', fontWeight: 700 }}>
                   {t('bleTelemetryTitle')}
@@ -1080,12 +1080,12 @@ export default function Wearable() {
       }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-            <span style={{ width: '10px', height: '10px', borderRadius: '50%', background: '#22c55e' }} className="animate-glow" />
+            <span style={{ width: '10px', height: '10px', borderRadius: '50%', background: '#22c55e' }} className="animate-radar-ping" />
             <span style={{ fontSize: '0.9rem', fontWeight: 600, letterSpacing: '0.05em' }}>
               {t('liveECGBanner')} {isDemo ? t('demoFeedTag') : t('bleStreamTag')}
             </span>
           </div>
-          <div style={{ fontSize: '1.8rem', fontWeight: 800, color: '#fb7185' }}>
+          <div className="animate-ecg-pulse" style={{ fontSize: '1.8rem', fontWeight: 800, color: '#fb7185' }}>
             {vitals.heartRate} <span style={{ fontSize: '0.9rem', color: '#94a3b8' }}>{t('bpm')}</span>
           </div>
         </div>
@@ -1106,14 +1106,14 @@ export default function Wearable() {
         marginBottom: '36px'
       }}>
         {/* 1. Resting Heart Rate */}
-        <div className="glass-card" style={{ padding: '22px', background: 'white', borderRadius: 'var(--radius-md)', border: '1px solid #fecdd3' }}>
+        <div className="glass-card card-interactive" style={{ padding: '22px', background: 'white', borderRadius: 'var(--radius-md)', border: '1px solid #fecdd3' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
             <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: 700 }}>
               {t('restingHeartRateTitle')}
             </span>
-            <Heart size={20} color="var(--pink-600)" />
+            <Heart size={20} color="var(--pink-600)" className="animate-ecg-pulse" />
           </div>
-          <div style={{ fontSize: '2.1rem', fontWeight: 800, color: 'var(--pink-600)', marginBottom: '8px' }}>
+          <div className="animate-ecg-pulse" style={{ fontSize: '2.1rem', fontWeight: 800, color: 'var(--pink-600)', marginBottom: '8px' }}>
             {vitals.heartRate} <span style={{ fontSize: '0.85rem' }}>{t('bpm')}</span>
           </div>
           <div style={{ fontSize: '0.78rem', color: '#16a34a', fontWeight: 700, lineHeight: '1.4' }}>
@@ -1418,7 +1418,7 @@ export default function Wearable() {
           <div className="glass-card" style={{ padding: '24px', background: 'white', borderRadius: 'var(--radius-lg)', border: '1px solid #bae6fd' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                <Droplets size={22} color="#0284c7" />
+                <Droplets size={22} color="#0284c7" className="animate-liquid-wave" />
                 <h3 style={{ fontSize: '1.05rem', margin: 0, color: 'var(--navy-dark)', fontWeight: 700 }}>
                   {t('hydrationPacing')}
                 </h3>

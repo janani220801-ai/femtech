@@ -23,10 +23,12 @@ import {
   Moon,
   Clock,
   Sparkle,
-  Compass
+  Compass,
+  Flame
 } from 'lucide-react';
 import DisclaimerBanner from '../common/DisclaimerBanner';
 import BrandWingsLogo from '../common/BrandWingsLogo';
+import BreathingPacerWidget from '../common/BreathingPacerWidget';
 
 
 export const DASH_I18N = {
@@ -423,92 +425,103 @@ export default function MainDashboard({ onNavigate, onOpenNotifications }) {
           {onOpenNotifications && (
             <button
               onClick={onOpenNotifications}
-              className="glass-card"
+              className="glass-card card-interactive"
               style={{ padding: '14px 10px', textAlign: 'center', border: '1px solid var(--border-subtle)', cursor: 'pointer', background: 'white' }}
             >
-              <div style={{ fontSize: '1.6rem', marginBottom: '4px' }}>📲</div>
+              <div className="animate-bell-ring" style={{ fontSize: '1.6rem', marginBottom: '4px' }}>📲</div>
               <div style={{ fontSize: '0.78rem', fontWeight: 700, color: 'var(--rose-primary)' }}>{t('dailySMS')}</div>
             </button>
           )}
 
           <button
             onClick={() => onNavigate('divas-meeting')}
-            className="glass-card"
+            className="glass-card card-interactive"
             style={{ padding: '14px 10px', textAlign: 'center', border: '1px solid var(--border-subtle)', cursor: 'pointer', background: 'white' }}
           >
-            <div style={{ fontSize: '1.6rem', marginBottom: '4px' }}>💬</div>
+            <div className="animate-float" style={{ fontSize: '1.6rem', marginBottom: '4px' }}>💬</div>
             <div style={{ fontSize: '0.78rem', fontWeight: 700, color: 'var(--rose-primary)' }}>{t('divasMeeting') || t('deepasMeeting') || "Diva's Meeting"}</div>
           </button>
 
           <button
             onClick={() => onNavigate('ai-assistant')}
-            className="glass-card"
+            className="glass-card card-interactive"
             style={{ padding: '14px 10px', textAlign: 'center', border: '1px solid var(--border-subtle)', cursor: 'pointer', background: 'white' }}
           >
-            <div style={{ fontSize: '1.6rem', marginBottom: '4px' }}>🤖</div>
+            <div className="animate-sparkle-spin" style={{ fontSize: '1.6rem', marginBottom: '4px' }}>🤖</div>
             <div style={{ fontSize: '0.78rem', fontWeight: 700, color: 'var(--rose-primary)' }}>{t('askAI')}</div>
           </button>
 
           <button
             onClick={() => onNavigate('cycle-tracker')}
-            className="glass-card"
+            className="glass-card card-interactive"
             style={{ padding: '14px 10px', textAlign: 'center', border: '1px solid var(--border-subtle)', cursor: 'pointer', background: 'white' }}
           >
-            <div style={{ fontSize: '1.6rem', marginBottom: '4px' }}>🩸</div>
+            <div className="animate-heartbeat" style={{ fontSize: '1.6rem', marginBottom: '4px' }}>🩸</div>
             <div style={{ fontSize: '0.78rem', fontWeight: 700, color: 'var(--rose-primary)' }}>{t('trackPeriod')}</div>
           </button>
 
           <button
+            onClick={() => onNavigate('menopause-check')}
+            className="glass-card card-interactive"
+            style={{ padding: '14px 10px', textAlign: 'center', border: '1.5px solid #fed7aa', cursor: 'pointer', background: 'linear-gradient(135deg, #ffffff 0%, #fff7ed 100%)' }}
+          >
+            <div className="animate-flame-flicker" style={{ fontSize: '1.6rem', marginBottom: '4px' }}>🔥</div>
+            <div style={{ fontSize: '0.78rem', fontWeight: 800, color: '#c2410c' }}>
+              {language === 'ta' ? 'மெனோபாஸ்' : 'Menopause'}
+            </div>
+          </button>
+
+          <button
             onClick={() => onNavigate('daily-log')}
-            className="glass-card"
+            className="glass-card card-interactive"
             style={{ padding: '14px 10px', textAlign: 'center', border: '1px solid var(--border-subtle)', cursor: 'pointer', background: 'white' }}
           >
-            <div style={{ fontSize: '1.6rem', marginBottom: '4px' }}>💖</div>
+            <div className="animate-breathe" style={{ fontSize: '1.6rem', marginBottom: '4px' }}>💖</div>
             <div style={{ fontSize: '0.78rem', fontWeight: 700, color: 'var(--rose-primary)' }}>{t('logMood')}</div>
           </button>
 
           <button
             onClick={handleQuickAddWater}
-            className="glass-card"
+            className="glass-card card-interactive"
             style={{ padding: '14px 10px', textAlign: 'center', border: '1px solid var(--border-subtle)', cursor: 'pointer', background: 'white' }}
           >
-            <div style={{ fontSize: '1.6rem', marginBottom: '4px' }}>💧</div>
+            <div className="animate-liquid-wave" style={{ fontSize: '1.6rem', marginBottom: '4px' }}>💧</div>
             <div style={{ fontSize: '0.78rem', fontWeight: 700, color: 'var(--rose-primary)' }}>{t('addWater')}</div>
           </button>
 
           <button
             onClick={() => onNavigate('pregnancy')}
-            className="glass-card"
+            className="glass-card card-interactive"
             style={{ padding: '14px 10px', textAlign: 'center', border: '1px solid var(--border-subtle)', cursor: 'pointer', background: 'white' }}
           >
-            <div style={{ fontSize: '1.6rem', marginBottom: '4px' }}>🤰</div>
+            <div className="animate-float" style={{ fontSize: '1.6rem', marginBottom: '4px' }}>🤰</div>
             <div style={{ fontSize: '0.78rem', fontWeight: 700, color: 'var(--rose-primary)' }}>{t('pregnancyCheck')}</div>
           </button>
 
           <button
             onClick={() => onNavigate('thyroid-check')}
-            className="glass-card"
+            className="glass-card card-interactive"
             style={{ padding: '14px 10px', textAlign: 'center', border: '1px solid var(--border-subtle)', cursor: 'pointer', background: 'white' }}
           >
-            <div style={{ fontSize: '1.6rem', marginBottom: '4px' }}>🦋</div>
+            <div className="animate-butterfly" style={{ fontSize: '1.6rem', marginBottom: '4px' }}>🦋</div>
             <div style={{ fontSize: '0.78rem', fontWeight: 700, color: 'var(--rose-primary)' }}>{t('thyroidCheck')}</div>
           </button>
 
           <button
             onClick={() => onNavigate('pcos-check')}
-            className="glass-card"
+            className="glass-card card-interactive"
             style={{ padding: '14px 10px', textAlign: 'center', border: '1px solid var(--border-subtle)', cursor: 'pointer', background: 'white' }}
           >
-            <div style={{ fontSize: '1.6rem', marginBottom: '4px' }}>🩺</div>
+            <div className="animate-glow" style={{ fontSize: '1.6rem', marginBottom: '4px' }}>🩺</div>
             <div style={{ fontSize: '0.78rem', fontWeight: 700, color: 'var(--rose-primary)' }}>{t('pcosCheck')}</div>
           </button>
 
           <button
             onClick={() => onNavigate('health-vault')}
-            className="glass-card"
+            className="glass-card card-interactive"
             style={{ padding: '14px 10px', textAlign: 'center', border: '1px solid var(--border-subtle)', cursor: 'pointer', background: 'white' }}
           >
-            <div style={{ fontSize: '1.6rem', marginBottom: '4px' }}>📁</div>
+            <div className="animate-float" style={{ fontSize: '1.6rem', marginBottom: '4px' }}>📁</div>
             <div style={{ fontSize: '0.78rem', fontWeight: 700, color: 'var(--rose-primary)' }}>{t('healthVault')}</div>
           </button>
         </div>
@@ -522,26 +535,26 @@ export default function MainDashboard({ onNavigate, onOpenNotifications }) {
         marginBottom: '28px'
       }}>
         {/* 1. CYCLE TILE */}
-        <div className="glass-card" style={{ padding: '24px', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
+        <div className="glass-card card-interactive" style={{ padding: '24px', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
           <div>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '16px' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
                 <div style={{ background: 'var(--pink-100)', padding: '8px', borderRadius: '12px', color: 'var(--rose-primary)' }}>
-                  <CalendarHeart size={22} />
+                  <CalendarHeart size={22} className="animate-breathe" />
                 </div>
                 <div>
                   <h3 style={{ fontSize: '1.05rem', color: 'var(--text-primary)' }}>{t('menstrualCycle')}</h3>
                   <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>{t('patternPrediction')}</span>
                 </div>
               </div>
-              <span className="badge badge-pink">{t('regular')}</span>
+              <span className="badge badge-pink animate-shimmer">{t('regular')}</span>
             </div>
 
             <div style={{ textAlign: 'center', padding: '14px 0', borderBottom: '1px solid var(--pink-100)', marginBottom: '14px' }}>
               <div style={{ fontSize: '0.82rem', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
                 {t('currentCycleDay')}
               </div>
-              <div style={{ fontSize: '2.8rem', fontWeight: 800, color: 'var(--rose-primary)', lineHeight: '1.1' }}>
+              <div className="animate-heartbeat" style={{ fontSize: '2.8rem', fontWeight: 800, color: 'var(--rose-primary)', lineHeight: '1.1' }}>
                 {t('day')} {cycleData.cycleDay}
               </div>
               <div style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', marginTop: '4px' }}>
@@ -571,12 +584,12 @@ export default function MainDashboard({ onNavigate, onOpenNotifications }) {
         </div>
 
         {/* 2. WELLNESS TILE */}
-        <div className="glass-card" style={{ padding: '24px', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
+        <div className="glass-card card-interactive" style={{ padding: '24px', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
           <div>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '16px' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
                 <div style={{ background: '#fef3c7', padding: '8px', borderRadius: '12px', color: '#b45309' }}>
-                  <Smile size={22} />
+                  <Smile size={22} className="animate-float" />
                 </div>
                 <div>
                   <h3 style={{ fontSize: '1.05rem', color: 'var(--text-primary)' }}>{t('dailyWellness')}</h3>
@@ -601,8 +614,9 @@ export default function MainDashboard({ onNavigate, onOpenNotifications }) {
 
               <div style={{ display: 'flex', justifyContent: 'space-between', padding: '6px 0', borderBottom: '1px solid var(--pink-50)' }}>
                 <span style={{ color: 'var(--text-secondary)' }}>{t('hydration')}:</span>
-                <strong style={{ color: '#0284c7' }}>
-                  {wellnessData.waterGlasses} / {wellnessData.waterTarget} {t('glasses')}
+                <strong style={{ color: '#0284c7', display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+                  <span className="animate-liquid-wave">💧</span>
+                  <span>{wellnessData.waterGlasses} / {wellnessData.waterTarget} {t('glasses')}</span>
                 </strong>
               </div>
 
@@ -623,26 +637,26 @@ export default function MainDashboard({ onNavigate, onOpenNotifications }) {
         </div>
 
         {/* 3. WEARABLE IOT TILE */}
-        <div className="glass-card" style={{ padding: '24px', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
+        <div className="glass-card card-interactive" style={{ padding: '24px', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
           <div>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '16px' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
                 <div style={{ background: '#ecfdf5', padding: '8px', borderRadius: '12px', color: '#059669' }}>
-                  <Watch size={22} />
+                  <Watch size={22} className="animate-breathe" />
                 </div>
                 <div>
                   <h3 style={{ fontSize: '1.05rem', color: 'var(--text-primary)' }}>{t('wearableVitals')}</h3>
                   <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>{t('iotTelemetry')}</span>
                 </div>
               </div>
-              <span className="badge badge-demo">{t('demoVitals')}</span>
+              <span className="badge badge-demo animate-radar-ping">{t('demoVitals')}</span>
             </div>
 
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px', textAlign: 'center' }}>
               <div style={{ background: 'var(--pink-50)', padding: '10px', borderRadius: 'var(--radius-sm)' }}>
                 <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>{t('heartRate')}</div>
-                <div style={{ fontSize: '1.35rem', fontWeight: 800, color: 'var(--rose-primary)' }}>
-                  {wearableData.heartRate} <span style={{ fontSize: '0.7rem' }}>{t('bpm')}</span>
+                <div className="animate-ecg-pulse" style={{ fontSize: '1.35rem', fontWeight: 800, color: 'var(--rose-primary)' }}>
+                  ❤️ {wearableData.heartRate} <span style={{ fontSize: '0.7rem' }}>{t('bpm')}</span>
                 </div>
               </div>
 
@@ -662,7 +676,7 @@ export default function MainDashboard({ onNavigate, onOpenNotifications }) {
 
               <div style={{ background: '#fffbeb', padding: '10px', borderRadius: 'var(--radius-sm)' }}>
                 <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>{t('skinTemp')}</div>
-                <div style={{ fontSize: '1.3rem', fontWeight: 800, color: '#d97706' }}>
+                <div className="animate-flame-flicker" style={{ fontSize: '1.3rem', fontWeight: 800, color: '#d97706' }}>
                   {wearableData.skinTemp}°C
                 </div>
               </div>
@@ -679,12 +693,12 @@ export default function MainDashboard({ onNavigate, onOpenNotifications }) {
         </div>
 
         {/* 4. HEALTH & APPOINTMENTS TILE */}
-        <div className="glass-card" style={{ padding: '24px', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
+        <div className="glass-card card-interactive" style={{ padding: '24px', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
           <div>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '16px' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
                 <div style={{ background: '#f5f3ff', padding: '8px', borderRadius: '12px', color: '#7c3aed' }}>
-                  <Pill size={22} />
+                  <Pill size={22} className="animate-sparkle-spin" />
                 </div>
                 <div>
                   <h3 style={{ fontSize: '1.05rem', color: 'var(--text-primary)' }}>{t('healthMeds')}</h3>
@@ -745,6 +759,9 @@ export default function MainDashboard({ onNavigate, onOpenNotifications }) {
           </button>
         </div>
       </div>
+
+      {/* DIAPHRAGMATIC BREATH PACER ANIMATED WIDGET */}
+      <BreathingPacerWidget />
 
       {/* AI WELLNESS INSIGHTS & DAILY TIPS - Full Dynamic Content Card */}
       <div className="glass-card" style={{

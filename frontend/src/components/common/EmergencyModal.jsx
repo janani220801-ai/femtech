@@ -578,7 +578,7 @@ export default function EmergencyModal({ isOpen, onClose }) {
             justifyContent: 'center',
             flexShrink: 0
           }}>
-            <AlertOctagon size={28} />
+            <AlertOctagon size={28} className="animate-heartbeat" />
           </div>
           <div>
             <h2 style={{ fontSize: '1.25rem', color: '#b91c1c', margin: 0, fontWeight: 800 }}>
@@ -608,6 +608,7 @@ export default function EmergencyModal({ isOpen, onClose }) {
           {/* National Ambulance Call Button */}
           <a
             href="tel:108"
+            className="card-interactive"
             style={{
               display: 'flex',
               alignItems: 'center',
@@ -623,7 +624,7 @@ export default function EmergencyModal({ isOpen, onClose }) {
             }}
           >
             <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-              <PhoneCall size={20} />
+              <PhoneCall size={20} className="animate-heartbeat" />
               <span>{eDict.callAmbulance}</span>
             </div>
             <span style={{ fontSize: '0.78rem', background: 'rgba(255, 255, 255, 0.25)', padding: '2px 8px', borderRadius: '10px' }}>

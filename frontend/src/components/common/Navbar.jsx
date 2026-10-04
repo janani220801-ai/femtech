@@ -223,17 +223,20 @@ export default function Navbar({ onOpenEmergency, onNavigate, onOpenNotification
           }}
           title={language === 'ta' ? 'அறிவிப்புகள்' : 'Notifications & Wellness Alerts'}
         >
-          <Bell size={18} color="var(--rose-primary)" />
-          <span style={{
-            position: 'absolute',
-            top: '8px',
-            right: '8px',
-            width: '8px',
-            height: '8px',
-            borderRadius: '50%',
-            background: '#059669',
-            border: '2px solid white'
-          }} />
+          <Bell size={18} color="var(--rose-primary)" className="animate-bell-ring" />
+          <span
+            className="animate-radar-ping"
+            style={{
+              position: 'absolute',
+              top: '8px',
+              right: '8px',
+              width: '8px',
+              height: '8px',
+              borderRadius: '50%',
+              background: '#059669',
+              border: '2px solid white'
+            }}
+          />
         </button>
 
         {/* Mobile Handset Link & QR Modal Trigger */}

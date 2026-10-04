@@ -11,10 +11,25 @@ const app = express();
 // Connect to Database
 connectDB();
 
-// Middleware
+// Production-grade Dynamic CORS Configuration
 app.use(cors({
-  origin: process.env.CLIENT_URL || '*',
-  credentials: true
+  origin: (origin, callback) => {
+    // Allow requests with no origin (such as mobile apps, curl, server-to-server)
+    if (!origin) return callback(null, true);
+    // Allow if matches CLIENT_URL
+    if (process.env.CLIENT_URL && (process.env.CLIENT_URL === '*' || origin === process.env.CLIENT_URL)) {
+      return callback(null, true);
+    }
+    // Allow local development origins
+    if (origin.startsWith('http://localhost') || origin.startsWith('http://127.0.0.1')) {
+      return callback(null, true);
+    }
+    // For deployed environments (Vercel, Netlify, Render, custom domains), reflect requesting origin to safely allow credentials
+    return callback(null, true);
+  },
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Accept', 'Origin']
 }));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));

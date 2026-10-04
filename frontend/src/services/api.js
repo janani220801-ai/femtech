@@ -1,4 +1,18 @@
-const BASE_URL = '/api';
+// Environment-aware API URL resolver for local development and deployed production hosts
+const resolveBaseUrl = () => {
+  const envUrl = import.meta.env.VITE_API_URL;
+  if (envUrl && typeof envUrl === 'string' && envUrl.trim() !== '') {
+    const clean = envUrl.trim().replace(/\/+$/, '');
+    return clean.endsWith('/api') ? clean : `${clean}/api`;
+  }
+  if (typeof window !== 'undefined' && window.__FEMTECH_API_URL__) {
+    const clean = window.__FEMTECH_API_URL__.trim().replace(/\/+$/, '');
+    return clean.endsWith('/api') ? clean : `${clean}/api`;
+  }
+  return '/api';
+};
+
+export const BASE_URL = resolveBaseUrl();
 
 const getHeaders = (isFormData = false) => {
   const token = localStorage.getItem('femtech_token');
@@ -12,6 +26,26 @@ const getHeaders = (isFormData = false) => {
   return headers;
 };
 
+// Safe response parser that detects HTML 404s from static deployment hosts
+const parseResponse = async (res) => {
+  const text = await res.text();
+  let data;
+  try {
+    data = text ? JSON.parse(text) : {};
+  } catch (err) {
+    if (!res.ok) {
+      throw new Error(`Server error (${res.status} ${res.statusText}). Check your backend deployment status.`);
+    }
+    throw new Error(
+      `Received non-JSON response from ${res.url}. In deployment, please set the VITE_API_URL environment variable to your deployed backend URL (e.g. https://your-backend.onrender.com).`
+    );
+  }
+  if (!res.ok) {
+    throw new Error(data.message || `Request failed with status ${res.status}`);
+  }
+  return data;
+};
+
 export const api = {
   // GET
   get: async (endpoint) => {
@@ -19,9 +53,7 @@ export const api = {
       method: 'GET',
       headers: getHeaders()
     });
-    const data = await res.json();
-    if (!res.ok) throw new Error(data.message || 'Request failed');
-    return data;
+    return parseResponse(res);
   },
 
   // POST JSON
@@ -31,9 +63,7 @@ export const api = {
       headers: getHeaders(),
       body: JSON.stringify(body)
     });
-    const data = await res.json();
-    if (!res.ok) throw new Error(data.message || 'Request failed');
-    return data;
+    return parseResponse(res);
   },
 
   // POST FORM DATA (Files, Documents, Audio)
@@ -43,9 +73,7 @@ export const api = {
       headers: getHeaders(true),
       body: formData
     });
-    const data = await res.json();
-    if (!res.ok) throw new Error(data.message || 'Upload failed');
-    return data;
+    return parseResponse(res);
   },
 
   // PUT JSON
@@ -55,9 +83,7 @@ export const api = {
       headers: getHeaders(),
       body: JSON.stringify(body)
     });
-    const data = await res.json();
-    if (!res.ok) throw new Error(data.message || 'Update failed');
-    return data;
+    return parseResponse(res);
   },
 
   // DELETE
@@ -66,8 +92,7 @@ export const api = {
       method: 'DELETE',
       headers: getHeaders()
     });
-    const data = await res.json();
-    if (!res.ok) throw new Error(data.message || 'Delete failed');
-    return data;
+    return parseResponse(res);
   }
 };
+
