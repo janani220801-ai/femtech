@@ -133,9 +133,10 @@ export default function AdminPortal() {
   const { language } = useLanguage();
   const dict = ADMIN_I18N[language] || ADMIN_I18N.ta || ADMIN_I18N.en;
 
-  const [activeTab, setActiveTab] = useState('users'); // users, activity, telemetry
+  const [activeTab, setActiveTab] = useState('users'); // users, activity, telemetry, whispers
   const [users, setUsers] = useState([]);
   const [activities, setActivities] = useState([]);
+  const [whispers, setWhispers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [userSearch, setUserSearch] = useState('');
   const [activitySearch, setActivitySearch] = useState('');
@@ -145,14 +146,35 @@ export default function AdminPortal() {
   const fetchAdminData = async () => {
     setLoading(true);
     try {
+      // 1. Read persistent local registration registry and anonymous whispers
+      const localRegUsers = JSON.parse(localStorage.getItem('femtech_all_registered_users') || '[]');
+      const localWhispers = JSON.parse(localStorage.getItem('femtech_anonymous_whispers') || '[]');
+      setWhispers(localWhispers);
+
       const [uRes, aRes] = await Promise.allSettled([
         api.get('/admin/users'),
         api.get('/admin/activity')
       ]);
 
+      let combinedUsers = [];
       if (uRes.status === 'fulfilled' && uRes.value.success) {
-        setUsers(uRes.value.users || []);
+        combinedUsers = [...(uRes.value.users || [])];
       }
+
+      // Merge localRegUsers avoiding duplicate emails
+      localRegUsers.forEach((lu) => {
+        if (!combinedUsers.some((cu) => cu.email?.toLowerCase() === lu.email?.toLowerCase())) {
+          combinedUsers.push({
+            ...lu,
+            status: 'ACTIVE (Registered)',
+            device: 'Mobile / Browser Client',
+            lastLogin: lu.registeredAt || new Date().toISOString()
+          });
+        }
+      });
+
+      setUsers(combinedUsers);
+
       if (aRes.status === 'fulfilled' && aRes.value.success) {
         setActivities(aRes.value.activities || []);
       }
@@ -161,6 +183,17 @@ export default function AdminPortal() {
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleToggleWhisperStatus = (whisperId) => {
+    const updated = whispers.map(w => {
+      if (w.id === whisperId) {
+        return { ...w, status: w.status === 'REVIEWED' ? 'UNREAD' : 'REVIEWED' };
+      }
+      return w;
+    });
+    setWhispers(updated);
+    localStorage.setItem('femtech_anonymous_whispers', JSON.stringify(updated));
   };
 
   useEffect(() => {
@@ -472,6 +505,7 @@ export default function AdminPortal() {
         {[
           { id: 'users', label: dict.tabUsers, count: users.length },
           { id: 'activity', label: dict.tabActivity, count: activities.length },
+          { id: 'whispers', label: language === 'ta' ? '🤫 ரகசிய செய்திகள் (Whispers)' : '🤫 Anonymous Whispers', count: whispers.length },
           { id: 'telemetry', label: dict.tabTelemetry, count: 'Live' }
         ].map(tab => (
           <button
@@ -778,6 +812,129 @@ export default function AdminPortal() {
               </div>
             ))}
           </div>
+        </div>
+      )}
+
+      {/* 5. TAB CONTENT: ANONYMOUS WHISPERS & CONFESSIONS */}
+      {activeTab === 'whispers' && (
+        <div className="glass-card" style={{ background: 'white', borderRadius: '24px', padding: '24px', border: '1.5px solid #fecdd3', boxShadow: '0 8px 30px rgba(0,0,0,0.04)' }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '20px', flexWrap: 'wrap', gap: '10px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+              <div style={{ width: '44px', height: '44px', borderRadius: '14px', background: '#ffe4e6', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.4rem' }}>
+                🤫
+              </div>
+              <div>
+                <h3 style={{ fontSize: '1.25rem', fontWeight: 800, color: 'var(--navy-dark)', margin: 0 }}>
+                  {language === 'ta' ? 'ரகசிய செய்திகள் & ஆலோசனைகள் (Anonymous Whispers)' : 'Confidential Anonymous Whispers & Confessions'}
+                </h3>
+                <p style={{ fontSize: '0.82rem', color: '#64748b', margin: '2px 0 0 0' }}>
+                  {language === 'ta'
+                    ? 'பயனர்கள் தங்கள் அடையாளத்தை வெளிப்படுத்தாமல் அனுப்பிய செய்திகள். (100% End-to-End Anonymous)'
+                    : 'Confidential messages and health concerns submitted with zero digital identity.'}
+                </p>
+              </div>
+            </div>
+
+            <span style={{ fontSize: '0.82rem', fontWeight: 700, background: '#fdf2f8', color: '#be123c', padding: '4px 12px', borderRadius: '12px', border: '1px solid #fbcfe8' }}>
+              Total Whispers: {whispers.length}
+            </span>
+          </div>
+
+          {whispers.length === 0 ? (
+            <div style={{ textAlign: 'center', padding: '40px 16px', color: '#64748b' }}>
+              <div style={{ fontSize: '2.5rem', marginBottom: '8px' }}>🌸</div>
+              <div style={{ fontWeight: 700, fontSize: '1rem', color: '#1e293b' }}>
+                {language === 'ta' ? 'ரகசிய செய்திகள் எதுவும் இதுவரை பதிவாகவில்லை' : 'No Anonymous Whispers Received Yet'}
+              </div>
+              <p style={{ fontSize: '0.84rem', color: '#64748b', marginTop: '4px' }}>
+                {language === 'ta'
+                  ? 'பயனர்கள் Anonymous Whisper மூலம் பகிரும் கேள்விகள் அனைத்தும் இங்கே மருத்துவ ஆலோசனைகளுக்காகத் தோன்றும்.'
+                  : 'Whenever a user submits a confidential question or confession, it will securely appear here.'}
+              </p>
+            </div>
+          ) : (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+              {whispers.map((whisp) => {
+                const isUrgent = whisp.urgency === 'emergency' || whisp.urgency === 'urgent';
+                const isReviewed = whisp.status === 'REVIEWED';
+
+                return (
+                  <div
+                    key={whisp.id}
+                    style={{
+                      padding: '18px 22px',
+                      borderRadius: '16px',
+                      background: isUrgent ? '#fff5f5' : isReviewed ? '#f8fafc' : '#fff1f2',
+                      border: isUrgent ? '2px solid #f87171' : isReviewed ? '1px solid #e2e8f0' : '1.5px solid #fecdd3',
+                      display: 'flex',
+                      flexDirection: 'column',
+                      gap: '10px',
+                      boxShadow: '0 2px 10px rgba(0,0,0,0.03)'
+                    }}
+                  >
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '8px' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                        <span style={{ fontSize: '1.2rem' }}>🤫</span>
+                        <strong style={{ fontSize: '0.95rem', color: '#881337' }}>
+                          {whisp.alias || 'Anonymous Sister'}
+                        </strong>
+                        <span style={{
+                          fontSize: '0.74rem',
+                          padding: '2px 8px',
+                          borderRadius: '8px',
+                          background: 'white',
+                          color: '#64748b',
+                          border: '1px solid #e2e8f0',
+                          fontWeight: 700
+                        }}>
+                          {whisp.category?.replace('_', ' ').toUpperCase()}
+                        </span>
+                        {isUrgent && (
+                          <span style={{
+                            fontSize: '0.72rem',
+                            padding: '2px 8px',
+                            borderRadius: '8px',
+                            background: '#dc2626',
+                            color: 'white',
+                            fontWeight: 800
+                          }}>
+                            ⚠️ {whisp.urgency?.toUpperCase()}
+                          </span>
+                        )}
+                      </div>
+
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                        <div style={{ fontSize: '0.76rem', color: '#94a3b8' }}>
+                          <Clock size={12} style={{ display: 'inline', marginRight: '4px' }} />
+                          {new Date(whisp.timestamp).toLocaleString()}
+                        </div>
+
+                        <button
+                          onClick={() => handleToggleWhisperStatus(whisp.id)}
+                          style={{
+                            padding: '4px 12px',
+                            borderRadius: '10px',
+                            border: isReviewed ? '1px solid #bbf7d0' : '1px solid #fda4af',
+                            background: isReviewed ? '#dcfce7' : 'white',
+                            color: isReviewed ? '#15803d' : '#be123c',
+                            fontSize: '0.78rem',
+                            fontWeight: 700,
+                            cursor: 'pointer'
+                          }}
+                        >
+                          {isReviewed ? '✓ Reviewed' : 'Mark Reviewed'}
+                        </button>
+                      </div>
+                    </div>
+
+                    <div style={{ fontSize: '0.96rem', color: '#1e293b', lineHeight: '1.6', background: 'white', padding: '14px 18px', borderRadius: '12px', border: '1px solid rgba(0,0,0,0.06)' }}>
+                      "{whisp.message}"
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
         </div>
       )}
 

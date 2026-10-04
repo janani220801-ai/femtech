@@ -26,6 +26,11 @@ export const ThemeProvider = ({ children }) => {
     return localStorage.getItem('femtech_logo_style') || 'auto';
   });
 
+  // Animation Mode: 'none' | 'subtle' | 'rich'
+  const [animationMode, setAnimationMode] = useState(() => {
+    return localStorage.getItem('femtech_animation_mode') || 'rich';
+  });
+
   // User Profile Avatar: 'knees' (Girl Hugging Knees) | 'initials' (Classic Clean Initial)
   const [profileAvatar, setProfileAvatar] = useState(() => {
     const saved = localStorage.getItem('femtech_profile_avatar');
@@ -45,6 +50,11 @@ export const ThemeProvider = ({ children }) => {
   }, [profileAvatar]);
 
   useEffect(() => {
+    localStorage.setItem('femtech_animation_mode', animationMode);
+    window.dispatchEvent(new CustomEvent('femtech_animation_changed', { detail: { mode: animationMode } }));
+  }, [animationMode]);
+
+  useEffect(() => {
     if (user?.theme) {
       setTheme(user.theme);
     }
@@ -55,7 +65,8 @@ export const ThemeProvider = ({ children }) => {
       theme,
       `font-size-${fontSize}`,
       fontSize === 'large' ? 'accessibility-large-text' : '',
-      highContrast ? 'accessibility-high-contrast' : ''
+      highContrast ? 'accessibility-high-contrast' : '',
+      animationMode === 'none' ? 'no-animations' : ''
     ].filter(Boolean).join(' ');
 
     document.documentElement.className = classList;
@@ -65,7 +76,7 @@ export const ThemeProvider = ({ children }) => {
     localStorage.setItem('femtech_font_size', fontSize);
     localStorage.setItem('femtech_large_text', String(fontSize === 'large'));
     localStorage.setItem('femtech_high_contrast', String(highContrast));
-  }, [theme, fontSize, highContrast]);
+  }, [theme, fontSize, highContrast, animationMode]);
 
   const toggleLargeText = () => {
     setFontSize((prev) => (prev === 'large' ? 'default' : 'large'));
@@ -87,7 +98,9 @@ export const ThemeProvider = ({ children }) => {
         logoStyle,
         setLogoStyle,
         profileAvatar,
-        setProfileAvatar
+        setProfileAvatar,
+        animationMode,
+        setAnimationMode
       }}
     >
       {children}

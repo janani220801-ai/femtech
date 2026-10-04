@@ -79,6 +79,19 @@ h1, h2, h3, h4, h5, h6 {
   transform: translateY(-2px);
 }
 
+/* Zero-Animation Mode when user disables animations */
+.no-animations,
+.no-animations *,
+.no-animations *::before,
+.no-animations *::after {
+  animation: none !important;
+  animation-duration: 0.001ms !important;
+  animation-iteration-count: 1 !important;
+  transition: none !important;
+  transition-duration: 0.001ms !important;
+  transform: none !important;
+}
+
 /* Primary Button */
 .btn-primary {
   background: var(--rose-gradient);

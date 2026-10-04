@@ -4,6 +4,7 @@ import { useLanguage } from '../../context/LanguageContext';
 import { useTheme } from '../../context/ThemeContext';
 import { useViewMode } from '../../context/ViewModeContext';
 import BrandWingsLogo from '../common/BrandWingsLogo';
+import DisclaimerBanner from '../common/DisclaimerBanner';
 import { useSmsAlert } from '../../context/SmsAlertContext';
 import {
   Settings as SettingsIcon,
@@ -41,8 +42,9 @@ import {
 export default function Settings({ onNavigate, onOpenNotifications }) {
   const { user } = useAuth();
   const { language, changeLanguage, t, languages } = useLanguage();
-  const { theme, setTheme, fontSize, setFontSize, largeText, toggleLargeText, highContrast, toggleHighContrast, logoStyle, setLogoStyle, profileAvatar, setProfileAvatar } = useTheme();
+  const { theme, setTheme, fontSize, setFontSize, largeText, toggleLargeText, highContrast, toggleHighContrast, logoStyle, setLogoStyle, profileAvatar, setProfileAvatar, animationMode, setAnimationMode } = useTheme();
   const { viewMode, setViewMode, isAdmin } = useViewMode();
+  const isAuthorizedAdmin = user?.email?.toLowerCase() === 'janani@femtech.health' || user?.role === 'admin';
   const {
     userPhone,
     motherName,
@@ -264,6 +266,34 @@ Daily Steps: 7,420 steps (Cadence: 104 spm)`;
       border: '#f59e0b',
       bg: '#fff1f2',
       primary: '#e11d48'
+    },
+    {
+      id: 'ocean-turquoise',
+      name: language === 'ta' ? '🌊 Ocean Turquoise (ஆழ்கடல் பிரகாசம்)' : '🌊 Ocean Turquoise (Azure Breeze)',
+      border: '#06b6d4',
+      bg: '#ecfeff',
+      primary: '#0891b2'
+    },
+    {
+      id: 'sunset-amber',
+      name: language === 'ta' ? '🌅 Sunset Amber (அந்தி மாலை தங்கம்)' : '🌅 Sunset Amber (Golden Twilight)',
+      border: '#f59e0b',
+      bg: '#fffbeb',
+      primary: '#d97706'
+    },
+    {
+      id: 'wild-berry-rose',
+      name: language === 'ta' ? '🫐 Wild Berry Rose (காட்டு மலர்)' : '🫐 Wild Berry Rose (Blossom Dew)',
+      border: '#e11d48',
+      bg: '#fff1f2',
+      primary: '#be123c'
+    },
+    {
+      id: 'forest-jade',
+      name: language === 'ta' ? '🌲 Forest Jade (பசுமை மரகதம்)' : '🌲 Forest Jade (Botanical Harmony)',
+      border: '#10b981',
+      bg: '#f0fdf4',
+      primary: '#047857'
     }
   ];
 
@@ -419,53 +449,55 @@ Daily Steps: 7,420 steps (Cadence: 104 spm)`;
           </div>
         </div>
 
-        {/* Global View Mode Switcher in Settings */}
-        <div style={{
-          display: 'flex',
-          alignItems: 'center',
-          gap: '6px',
-          background: isAdmin ? '#09090b' : '#f1f5f9',
-          padding: '4px',
-          borderRadius: 'var(--radius-full)',
-          border: '1px solid var(--border-subtle)'
-        }}>
-          <button
-            onClick={() => setViewMode('user')}
-            style={{
-              padding: '6px 14px',
-              borderRadius: 'var(--radius-full)',
-              border: 'none',
-              background: viewMode === 'user' ? 'white' : 'transparent',
-              color: viewMode === 'user' ? 'var(--rose-primary)' : '#64748b',
-              fontWeight: viewMode === 'user' ? 700 : 500,
-              fontSize: '0.8rem',
-              cursor: 'pointer'
-            }}
-          >
-            👤 {t('userViewMode')}
-          </button>
-          <button
-            onClick={() => setViewMode('admin')}
-            style={{
-              padding: '6px 14px',
-              borderRadius: 'var(--radius-full)',
-              border: 'none',
-              background: viewMode === 'admin' ? 'var(--rose-gradient)' : 'transparent',
-              color: viewMode === 'admin' ? 'white' : '#64748b',
-              fontWeight: viewMode === 'admin' ? 700 : 500,
-              fontSize: '0.8rem',
-              cursor: 'pointer'
-            }}
-          >
-            🛡️ {t('adminViewMode')}
-          </button>
-        </div>
+        {/* Global View Mode Switcher in Settings (Guarded for Janani Admin Only) */}
+        {isAuthorizedAdmin && (
+          <div style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: '6px',
+            background: isAdmin ? '#09090b' : '#f1f5f9',
+            padding: '4px',
+            borderRadius: 'var(--radius-full)',
+            border: '1px solid var(--border-subtle)'
+          }}>
+            <button
+              onClick={() => setViewMode('user')}
+              style={{
+                padding: '6px 14px',
+                borderRadius: 'var(--radius-full)',
+                border: 'none',
+                background: viewMode === 'user' ? 'white' : 'transparent',
+                color: viewMode === 'user' ? 'var(--rose-primary)' : '#64748b',
+                fontWeight: viewMode === 'user' ? 700 : 500,
+                fontSize: '0.8rem',
+                cursor: 'pointer'
+              }}
+            >
+              👤 {t('userViewMode')}
+            </button>
+            <button
+              onClick={() => setViewMode('admin')}
+              style={{
+                padding: '6px 14px',
+                borderRadius: 'var(--radius-full)',
+                border: 'none',
+                background: viewMode === 'admin' ? 'var(--rose-gradient)' : 'transparent',
+                color: viewMode === 'admin' ? 'white' : '#64748b',
+                fontWeight: viewMode === 'admin' ? 700 : 500,
+                fontSize: '0.8rem',
+                cursor: 'pointer'
+              }}
+            >
+              🛡️ {t('adminViewMode')}
+            </button>
+          </div>
+        )}
       </div>
 
       {/* ============================================================ */}
       {/* ADMINISTRATOR ONLY: SYSTEM DATABASE & AUDIT TELEMETRY CARD   */}
       {/* ============================================================ */}
-      {isAdmin && (
+      {isAdmin && isAuthorizedAdmin && (
         <div className="glass-card" style={{
           padding: '26px',
           background: 'linear-gradient(135deg, #18181b 0%, #27272a 100%)',
@@ -540,6 +572,122 @@ Daily Steps: 7,420 steps (Cadence: 104 spm)`;
           </div>
         </div>
       )}
+
+      {/* ANIMATION & MOTION CONTROLS */}
+      <div className="glass-card" style={{ padding: '26px', background: 'white', borderRadius: 'var(--radius-lg)', border: '1px solid var(--border-subtle)' }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '14px', flexWrap: 'wrap', gap: '10px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+            <Sparkles size={20} color="var(--rose-primary)" />
+            <div>
+              <h2 style={{ fontSize: '1.25rem', color: 'var(--text-primary)', margin: 0 }}>
+                {language === 'ta' ? '🎬 UI அனிமேஷன் & மிதக்கும் மலர் இதழ்கள் கட்டுப்பாடு' : '🎬 UI Animation & Blossom Motion Controls'}
+              </h2>
+              <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', margin: '4px 0 0 0' }}>
+                {language === 'ta'
+                  ? 'அனிமேஷன் வேண்டாம் என நீங்கள் தேர்வு செய்தால் அனைத்து அனிமேஷன்களும், மிதக்கும் இதழ்களும் உடனடியாக ரத்து செய்யப்படும்.'
+                  : 'Turn off animations completely to stop all movement, page transitions, and floating petals.'}
+              </p>
+            </div>
+          </div>
+          <span style={{
+            fontSize: '0.8rem',
+            padding: '4px 12px',
+            borderRadius: '12px',
+            background: animationMode === 'none' ? '#fee2e2' : animationMode === 'subtle' ? '#fef3c7' : '#ecfdf5',
+            color: animationMode === 'none' ? '#dc2626' : animationMode === 'subtle' ? '#b45309' : '#059669',
+            fontWeight: 700
+          }}>
+            {animationMode === 'none'
+              ? (language === 'ta' ? '⛔ அனிமேஷன் அணைக்கப்பட்டது (None)' : '⛔ Animations Disabled (None)')
+              : animationMode === 'subtle'
+              ? (language === 'ta' ? '🌿 மிதமான அனிமேஷன் (Subtle)' : '🌿 Subtle Motion')
+              : (language === 'ta' ? '🌸 முழு மலர் இதழ்கள் & அனிமேஷன் (Rich)' : '🌸 Full Blossom Animations (Rich)')}
+          </span>
+        </div>
+
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '14px', marginTop: '14px' }}>
+          {/* NONE Option */}
+          <button
+            type="button"
+            onClick={() => setAnimationMode('none')}
+            style={{
+              padding: '16px',
+              borderRadius: 'var(--radius-md)',
+              border: animationMode === 'none' ? '2.5px solid #dc2626' : '1px solid var(--border-subtle)',
+              background: animationMode === 'none' ? '#fef2f2' : '#f8fafc',
+              cursor: 'pointer',
+              textAlign: 'left',
+              transition: 'var(--transition)'
+            }}
+          >
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '6px' }}>
+              <strong style={{ color: animationMode === 'none' ? '#dc2626' : 'var(--text-primary)', fontSize: '0.96rem' }}>
+                ⛔ {language === 'ta' ? 'None (அனிமேஷன் வேண்டாம்)' : 'None (Zero Animations)'}
+              </strong>
+              {animationMode === 'none' && <Check size={18} color="#dc2626" />}
+            </div>
+            <div style={{ fontSize: '0.78rem', color: '#64748b', lineHeight: '1.4' }}>
+              {language === 'ta'
+                ? 'அனைத்து நகர்வுகள், மிதக்கும் மலர் இதழ்கள், கண் சிமிட்டும் ஒளிர்தல்கள் முற்றிலும் செயலிழக்கப்படும்.'
+                : 'Completely disables all animations, floating blossom petals, transitions, and pulsing effects.'}
+            </div>
+          </button>
+
+          {/* SUBTLE Option */}
+          <button
+            type="button"
+            onClick={() => setAnimationMode('subtle')}
+            style={{
+              padding: '16px',
+              borderRadius: 'var(--radius-md)',
+              border: animationMode === 'subtle' ? '2.5px solid #f59e0b' : '1px solid var(--border-subtle)',
+              background: animationMode === 'subtle' ? '#fffbeb' : '#f8fafc',
+              cursor: 'pointer',
+              textAlign: 'left',
+              transition: 'var(--transition)'
+            }}
+          >
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '6px' }}>
+              <strong style={{ color: animationMode === 'subtle' ? '#b45309' : 'var(--text-primary)', fontSize: '0.96rem' }}>
+                🌿 {language === 'ta' ? 'Subtle (மிதமான அனிமேஷன்)' : 'Subtle Motion'}
+              </strong>
+              {animationMode === 'subtle' && <Check size={18} color="#f59e0b" />}
+            </div>
+            <div style={{ fontSize: '0.78rem', color: '#64748b', lineHeight: '1.4' }}>
+              {language === 'ta'
+                ? 'மென்மையான மற்றும் அமைதியான நகர்வுகள் மட்டும் இயங்கும்.'
+                : 'Gentle, minimal UI transitions without aggressive pulsing or heavy effects.'}
+            </div>
+          </button>
+
+          {/* RICH Option */}
+          <button
+            type="button"
+            onClick={() => setAnimationMode('rich')}
+            style={{
+              padding: '16px',
+              borderRadius: 'var(--radius-md)',
+              border: animationMode === 'rich' ? '2.5px solid var(--rose-primary)' : '1px solid var(--border-subtle)',
+              background: animationMode === 'rich' ? '#fff1f2' : '#f8fafc',
+              cursor: 'pointer',
+              textAlign: 'left',
+              transition: 'var(--transition)'
+            }}
+          >
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '6px' }}>
+              <strong style={{ color: animationMode === 'rich' ? 'var(--pink-700)' : 'var(--text-primary)', fontSize: '0.96rem' }}>
+                🌸 {language === 'ta' ? 'Rich (முழு மலர் இதழ்கள்)' : 'Rich Blossom & Motion'}
+              </strong>
+              {animationMode === 'rich' && <Check size={18} color="var(--rose-primary)" />}
+            </div>
+            <div style={{ fontSize: '0.78rem', color: '#64748b', lineHeight: '1.4' }}>
+              {language === 'ta'
+                ? 'அழகிய மிதக்கும் மலர் இதழ்கள் மற்றும் வசீகர அனிமேஷன் இயங்கும்.'
+                : 'Full experience: floating petal canvas, smooth spring transitions, and interactive glows.'}
+            </div>
+          </button>
+        </div>
+      </div>
 
       {/* 1. VISUAL THEME SELECTION */}
       <div className="glass-card" style={{ padding: '26px', background: 'white', borderRadius: 'var(--radius-lg)', border: '1px solid var(--border-subtle)' }}>
@@ -1502,6 +1650,11 @@ Daily Steps: 7,420 steps (Cadence: 104 spm)`;
             </div>
           )}
         </div>
+      </div>
+
+      {/* Medical Disclaimer Banner at Bottom of Settings */}
+      <div style={{ marginTop: '24px', width: '100%' }}>
+        <DisclaimerBanner />
       </div>
     </div>
   );

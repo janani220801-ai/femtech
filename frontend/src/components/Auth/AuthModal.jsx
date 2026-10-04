@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { useLanguage } from '../../context/LanguageContext';
 import BrandWingsLogo from '../common/BrandWingsLogo';
@@ -43,6 +43,7 @@ export default function AuthModal({ isOpen, onClose }) {
 
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState('');
+  const [successMessage, setSuccessMessage] = useState('');
   const [loading, setLoading] = useState(false);
   const [showSOSModal, setShowSOSModal] = useState(false);
   const [isSirenActive, setIsSirenActive] = useState(false);
@@ -51,25 +52,31 @@ export default function AuthModal({ isOpen, onClose }) {
   // Blood Groups list requested by user
   const bloodGroups = ['O+', 'A+', 'B+', 'AB+', 'O-', 'A-', 'B-', 'AB-'];
 
-  // Form State with DOB, Blood Group, Age, and Emergency SOS Contact
-  const [formData, setFormData] = useState({
-    name: 'Janani S',
-    email: 'janani@femtech.health',
-    password: 'password123',
-    confirmPassword: 'password123',
-    phone: '+91 98401 23456',
+  // Clean, separate state for Sign In
+  const [signInData, setSignInData] = useState({
+    email: '',
+    password: ''
+  });
+
+  // Clean, unpolluted state for Create Account (User inputs only)
+  const [registerData, setRegisterData] = useState({
+    name: '',
+    email: '',
+    phone: '',
+    password: '',
+    confirmPassword: '',
     bloodGroup: 'B+',
-    dateOfBirth: '2001-05-14',
-    age: 24,
-    emergencyContactName: 'Kavitha (Mother)',
+    dateOfBirth: '',
+    age: 20,
+    emergencyContactName: '',
     emergencyContactRelation: 'Mother',
-    emergencyContactPhone: '+91 98401 65432'
+    emergencyContactPhone: ''
   });
 
   // Calculate age from date of birth automatically
   const handleDobChange = (e) => {
     const dob = e.target.value;
-    let computedAge = formData.age;
+    let computedAge = registerData.age;
     if (dob) {
       const birth = new Date(dob);
       const today = new Date();
@@ -82,7 +89,7 @@ export default function AuthModal({ isOpen, onClose }) {
         computedAge = calculated;
       }
     }
-    setFormData((prev) => ({ ...prev, dateOfBirth: dob, age: computedAge }));
+    setRegisterData((prev) => ({ ...prev, dateOfBirth: dob, age: computedAge }));
   };
 
   // 4 Target Age Brackets for Personalization
@@ -174,78 +181,97 @@ export default function AuthModal({ isOpen, onClose }) {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
+    setSuccessMessage('');
     setLoading(true);
 
     try {
       if (authTab === 'signin') {
+        const email = signInData.email.trim();
+        const password = signInData.password;
+        if (!email || !password) {
+          throw new Error(isTamil ? 'மின்னஞ்சல் மற்றும் கடவுச்சொல்லை உள்ளிடவும்' : 'Please provide your email and password');
+        }
+
         try {
-          await login(formData.email, formData.password);
+          await login(email, password);
         } catch (loginErr) {
           console.warn('Backend login fallback to local session:', loginErr.message);
-          const demoName = formData.email.split('@')[0] || 'User';
+          const demoName = email.split('@')[0] || 'User';
           const capName = demoName.charAt(0).toUpperCase() + demoName.slice(1);
-          await instantDemoLogin(formData.age || 24, capName);
+          await instantDemoLogin(24, capName);
         }
+
+        sessionStorage.removeItem('femtech_just_logged_out');
+        setJustLoggedOut(false);
+        if (onClose) onClose();
       } else {
-        if (formData.password !== formData.confirmPassword) {
+        // Validation for Create Account
+        if (!registerData.name.trim()) {
+          throw new Error(isTamil ? 'தயவுசெய்து உங்கள் முழுப் பெயரை உள்ளிடவும்' : 'Please provide your full name');
+        }
+        if (!registerData.email.trim()) {
+          throw new Error(isTamil ? 'தயவுசெய்து உங்கள் மின்னஞ்சலை உள்ளிடவும்' : 'Please provide your email address');
+        }
+        if (!registerData.password) {
+          throw new Error(isTamil ? 'கடவுச்சொல்லை உள்ளிடவும்' : 'Please provide a password');
+        }
+        if (registerData.password !== registerData.confirmPassword) {
           throw new Error(isTamil ? 'கடவுச்சொற்கள் பொருந்தவில்லை!' : 'Passwords do not match');
         }
-        try {
-          await signup({
-            name: formData.name || 'User',
-            email: formData.email,
-            password: formData.password,
-            age: Number(formData.age) || 24,
-            dateOfBirth: formData.dateOfBirth,
-            bloodGroup: formData.bloodGroup || 'B+',
-            phone: formData.phone || '',
-            emergencyContact: {
-              name: formData.emergencyContactName || 'Mother',
-              phone: formData.emergencyContactPhone || '+91 98401 65432',
-              relation: formData.emergencyContactRelation || 'Mother'
-            }
-          });
-        } catch (signupErr) {
-          console.warn('Backend signup fallback to local session:', signupErr.message);
-          await instantDemoLogin(Number(formData.age) || 24, formData.name || 'User');
+
+        const newUserPayload = {
+          name: registerData.name.trim(),
+          email: registerData.email.trim().toLowerCase(),
+          password: registerData.password,
+          age: Number(registerData.age) || 20,
+          dateOfBirth: registerData.dateOfBirth,
+          bloodGroup: registerData.bloodGroup || 'B+',
+          phone: registerData.phone.trim(),
+          emergencyContact: {
+            name: registerData.emergencyContactName.trim() || 'Mother',
+            phone: registerData.emergencyContactPhone.trim() || '',
+            relation: registerData.emergencyContactRelation || 'Mother'
+          }
+        };
+
+        await signup(newUserPayload);
+
+        // Save emergency contact, blood group and phone locally
+        if (newUserPayload.emergencyContact.phone) {
+          localStorage.setItem('femtech_mother_phone', newUserPayload.emergencyContact.phone);
+          const contactObj = [{
+            id: 'c1',
+            name: newUserPayload.emergencyContact.name,
+            relation: newUserPayload.emergencyContact.relation,
+            phone: newUserPayload.emergencyContact.phone,
+            isPrimary: true
+          }];
+          localStorage.setItem('femtech_emergency_contacts', JSON.stringify(contactObj));
         }
-      }
+        if (newUserPayload.emergencyContact.name) {
+          localStorage.setItem('femtech_mother_name', newUserPayload.emergencyContact.name);
+        }
+        if (newUserPayload.phone) {
+          localStorage.setItem('femtech_user_phone', newUserPayload.phone);
+        }
+        if (newUserPayload.bloodGroup) {
+          localStorage.setItem('femtech_user_blood_group', newUserPayload.bloodGroup);
+        }
+        if (newUserPayload.dateOfBirth) {
+          localStorage.setItem('femtech_user_dob', newUserPayload.dateOfBirth);
+        }
 
-      // Save emergency contact, blood group and phone locally
-      if (formData.emergencyContactPhone) {
-        localStorage.setItem('femtech_mother_phone', formData.emergencyContactPhone);
-        const contactObj = [{
-          id: 'c1',
-          name: formData.emergencyContactName || 'Mother',
-          relation: formData.emergencyContactRelation || 'Mother',
-          phone: formData.emergencyContactPhone,
-          isPrimary: true
-        }];
-        localStorage.setItem('femtech_emergency_contacts', JSON.stringify(contactObj));
-      }
-      if (formData.emergencyContactName) {
-        localStorage.setItem('femtech_mother_name', formData.emergencyContactName);
-      }
-      if (formData.phone) {
-        localStorage.setItem('femtech_user_phone', formData.phone);
-      }
-      if (formData.bloodGroup) {
-        localStorage.setItem('femtech_user_blood_group', formData.bloodGroup);
-      }
-      if (formData.dateOfBirth) {
-        localStorage.setItem('femtech_user_dob', formData.dateOfBirth);
-      }
+        // Clear justLoggedOut flag upon success
+        sessionStorage.removeItem('femtech_just_logged_out');
+        setJustLoggedOut(false);
 
-      // Clear justLoggedOut flag upon success
-      sessionStorage.removeItem('femtech_just_logged_out');
-      setJustLoggedOut(false);
+        // Dispatch event with age for auto-redirection
+        window.dispatchEvent(new CustomEvent('femtech_user_authenticated', {
+          detail: { age: newUserPayload.age, name: newUserPayload.name }
+        }));
 
-      // Dispatch event with age for auto-redirection
-      window.dispatchEvent(new CustomEvent('femtech_user_authenticated', {
-        detail: { age: Number(formData.age) || 24, name: formData.name }
-      }));
-
-      if (onClose) onClose();
+        if (onClose) onClose();
+      }
     } catch (err) {
       setError(err.message || 'Authentication error.');
     } finally {
@@ -376,7 +402,8 @@ export default function AuthModal({ isOpen, onClose }) {
                 fontWeight: 800,
                 color: '#be123c',
                 cursor: 'pointer',
-                outline: 'none'
+                outline: 'none',
+                maxWidth: '120px'
               }}
             >
               {languages.map((lang) => (
@@ -626,9 +653,9 @@ export default function AuthModal({ isOpen, onClose }) {
                     <input
                       type="email"
                       required
-                      value={formData.email}
-                      onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                      placeholder="janani@femtech.health"
+                      value={signInData.email}
+                      onChange={(e) => setSignInData({ ...signInData, email: e.target.value })}
+                      placeholder={isTamil ? 'உங்கள் மின்னஞ்சல் (எ.கா: janani@gmail.com)' : 'yourname@example.com'}
                       style={{
                         width: '100%',
                         padding: '12px 14px 12px 42px',
@@ -652,8 +679,8 @@ export default function AuthModal({ isOpen, onClose }) {
                     <input
                       type={showPassword ? 'text' : 'password'}
                       required
-                      value={formData.password}
-                      onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+                      value={signInData.password}
+                      onChange={(e) => setSignInData({ ...signInData, password: e.target.value })}
                       placeholder="••••••••"
                       style={{
                         width: '100%',
@@ -765,8 +792,8 @@ export default function AuthModal({ isOpen, onClose }) {
                   </h2>
                   <p style={{ fontSize: '0.86rem', color: '#64748b', margin: 0 }}>
                     {isTamil
-                      ? 'உங்கள் பெயர், இரத்த வகை, பிறந்த தேதி மற்றும் அவசர தொடர்புகளை பூர்த்தி செய்து உடனடியாகத் தொடங்குங்கள்.'
-                      : 'Personalized to your age, blood type, and emergency safety protocol.'}
+                      ? 'உங்கள் பெயர், இரத்த வகை, பிறந்த தேதி மற்றும் அவசர தொடர்புகளை உள்ளிட்டு புதிய கணக்கு தொடங்கவும்.'
+                      : 'Enter your name, blood group, date of birth, and emergency safety contact.'}
                   </p>
                 </div>
 
@@ -774,14 +801,14 @@ export default function AuthModal({ isOpen, onClose }) {
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '12px' }}>
                   <div>
                     <label style={{ display: 'block', fontSize: '0.82rem', fontWeight: 800, color: '#881337', marginBottom: '6px' }}>
-                      {isTamil ? 'முழுப் பெயர் (Full Name)' : 'Full Name'}
+                      {isTamil ? 'முழுப் பெயர் (Full Name) *' : 'Full Name *'}
                     </label>
                     <input
                       type="text"
                       required
-                      value={formData.name}
-                      onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                      placeholder={isTamil ? 'எ.கா: ஜனனி' : 'e.g. Janani S'}
+                      value={registerData.name}
+                      onChange={(e) => setRegisterData({ ...registerData, name: e.target.value })}
+                      placeholder={isTamil ? 'உங்கள் முழுப் பெயர்' : 'Your full name'}
                       style={{
                         width: '100%',
                         padding: '12px 14px',
@@ -796,13 +823,13 @@ export default function AuthModal({ isOpen, onClose }) {
 
                   <div>
                     <label style={{ display: 'block', fontSize: '0.82rem', fontWeight: 800, color: '#881337', marginBottom: '6px' }}>
-                      {isTamil ? 'தொலைபேசி எண் (Mobile Phone)' : 'Mobile Phone'}
+                      {isTamil ? 'தொலைபேசி எண் (Mobile Phone) *' : 'Mobile Phone *'}
                     </label>
                     <input
                       type="tel"
                       required
-                      value={formData.phone}
-                      onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+                      value={registerData.phone}
+                      onChange={(e) => setRegisterData({ ...registerData, phone: e.target.value })}
                       placeholder="+91 98401 23456"
                       style={{
                         width: '100%',
@@ -821,13 +848,13 @@ export default function AuthModal({ isOpen, onClose }) {
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '12px' }}>
                   <div>
                     <label style={{ display: 'block', fontSize: '0.82rem', fontWeight: 800, color: '#881337', marginBottom: '6px' }}>
-                      {isTamil ? 'மின்னஞ்சல் (Email Address)' : 'Email Address'}
+                      {isTamil ? 'மின்னஞ்சல் (Email Address) *' : 'Email Address *'}
                     </label>
                     <input
                       type="email"
                       required
-                      value={formData.email}
-                      onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                      value={registerData.email}
+                      onChange={(e) => setRegisterData({ ...registerData, email: e.target.value })}
                       placeholder="user@example.com"
                       style={{
                         width: '100%',
@@ -843,13 +870,13 @@ export default function AuthModal({ isOpen, onClose }) {
 
                   <div>
                     <label style={{ display: 'block', fontSize: '0.82rem', fontWeight: 800, color: '#881337', marginBottom: '6px' }}>
-                      {isTamil ? 'கடவுச்சொல் (Password)' : 'Password'}
+                      {isTamil ? 'கடவுச்சொல் (Password) *' : 'Password *'}
                     </label>
                     <input
                       type="password"
                       required
-                      value={formData.password}
-                      onChange={(e) => setFormData({ ...formData, password: e.target.value, confirmPassword: e.target.value })}
+                      value={registerData.password}
+                      onChange={(e) => setRegisterData({ ...registerData, password: e.target.value, confirmPassword: e.target.value })}
                       placeholder="••••••••"
                       style={{
                         width: '100%',
@@ -884,18 +911,18 @@ export default function AuthModal({ isOpen, onClose }) {
                         <span>{isTamil ? 'இரத்த வகை (Blood Type / Blood Positive):' : 'Blood Group / Blood Type:'}</span>
                       </label>
                       <span style={{ fontSize: '0.78rem', fontWeight: 900, color: '#e11d48', background: '#ffe4e6', padding: '2px 10px', borderRadius: '10px' }}>
-                        {formData.bloodGroup}
+                        {registerData.bloodGroup}
                       </span>
                     </div>
 
                     <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
                       {bloodGroups.map((bg) => {
-                        const isSelected = formData.bloodGroup === bg;
+                        const isSelected = registerData.bloodGroup === bg;
                         return (
                           <button
                             key={bg}
                             type="button"
-                            onClick={() => setFormData({ ...formData, bloodGroup: bg })}
+                            onClick={() => setRegisterData({ ...registerData, bloodGroup: bg })}
                             style={{
                               flex: '1 0 calc(25% - 8px)',
                               minWidth: '55px',
@@ -923,12 +950,12 @@ export default function AuthModal({ isOpen, onClose }) {
                   <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '12px', paddingTop: '10px', borderTop: '1px dashed #fecdd3' }}>
                     <div>
                       <label style={{ display: 'block', fontSize: '0.82rem', fontWeight: 800, color: '#881337', marginBottom: '6px' }}>
-                        📅 {isTamil ? 'பிறந்த தேதி (Date of Birth)' : 'Date of Birth'}
+                        📅 {isTamil ? 'பிறந்த தேதி (Date of Birth) *' : 'Date of Birth *'}
                       </label>
                       <input
                         type="date"
                         required
-                        value={formData.dateOfBirth}
+                        value={registerData.dateOfBirth}
                         onChange={handleDobChange}
                         style={{
                           width: '100%',
@@ -956,8 +983,8 @@ export default function AuthModal({ isOpen, onClose }) {
                         min="6"
                         max="90"
                         required
-                        value={formData.age}
-                        onChange={(e) => setFormData({ ...formData, age: Number(e.target.value) })}
+                        value={registerData.age}
+                        onChange={(e) => setRegisterData({ ...registerData, age: Number(e.target.value) })}
                         style={{
                           width: '100%',
                           padding: '10px 12px',
@@ -976,11 +1003,11 @@ export default function AuthModal({ isOpen, onClose }) {
                   {/* 4 Interactive Age Brackets */}
                   <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: '8px', marginTop: '4px' }}>
                     {ageBrackets.map((b) => {
-                      const isSelected = formData.age >= b.minAge && formData.age <= b.maxAge;
+                      const isSelected = registerData.age >= b.minAge && registerData.age <= b.maxAge;
                       return (
                         <div
                           key={b.id}
-                          onClick={() => setFormData({ ...formData, age: b.defaultAge })}
+                          onClick={() => setRegisterData({ ...registerData, age: b.defaultAge })}
                           style={{
                             padding: '10px',
                             borderRadius: '14px',
@@ -1045,10 +1072,9 @@ export default function AuthModal({ isOpen, onClose }) {
                       </label>
                       <input
                         type="text"
-                        required
-                        value={formData.emergencyContactName}
-                        onChange={(e) => setFormData({ ...formData, emergencyContactName: e.target.value })}
-                        placeholder="Kavitha (Mother)"
+                        value={registerData.emergencyContactName}
+                        onChange={(e) => setRegisterData({ ...registerData, emergencyContactName: e.target.value })}
+                        placeholder={isTamil ? 'தாய் / மருத்துவர் பெயர்' : 'e.g. Kavitha (Mother)'}
                         style={{ width: '100%', padding: '10px 12px', borderRadius: '12px', border: '1.5px solid #fed7aa', fontSize: '0.86rem', boxSizing: 'border-box' }}
                       />
                     </div>
@@ -1058,8 +1084,8 @@ export default function AuthModal({ isOpen, onClose }) {
                         {isTamil ? 'உறவுமுறை (Relation)' : 'Relationship'}
                       </label>
                       <select
-                        value={formData.emergencyContactRelation}
-                        onChange={(e) => setFormData({ ...formData, emergencyContactRelation: e.target.value })}
+                        value={registerData.emergencyContactRelation}
+                        onChange={(e) => setRegisterData({ ...registerData, emergencyContactRelation: e.target.value })}
                         style={{ width: '100%', padding: '10px 12px', borderRadius: '12px', border: '1.5px solid #fed7aa', fontSize: '0.86rem', boxSizing: 'border-box', background: 'white' }}
                       >
                         <option value="Mother">{isTamil ? 'தாய் (Mother)' : 'Mother'}</option>
@@ -1077,9 +1103,8 @@ export default function AuthModal({ isOpen, onClose }) {
                       </label>
                       <input
                         type="tel"
-                        required
-                        value={formData.emergencyContactPhone}
-                        onChange={(e) => setFormData({ ...formData, emergencyContactPhone: e.target.value })}
+                        value={registerData.emergencyContactPhone}
+                        onChange={(e) => setRegisterData({ ...registerData, emergencyContactPhone: e.target.value })}
                         placeholder="+91 98401 65432"
                         style={{ width: '100%', padding: '10px 12px', borderRadius: '12px', border: '1.5px solid #fed7aa', fontSize: '0.86rem', boxSizing: 'border-box' }}
                       />

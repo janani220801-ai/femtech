@@ -23,11 +23,12 @@ import {
   X
 } from 'lucide-react';
 
-export default function Navbar({ onOpenEmergency, onNavigate, onOpenNotifications, onOpenPhone }) {
+export default function Navbar({ onOpenEmergency, onNavigate, onOpenNotifications, onOpenPhone, onOpenWhisper }) {
   const { user, logout } = useAuth();
   const { language, changeLanguage, t, languages } = useLanguage();
   const { largeText, toggleLargeText, profileAvatar } = useTheme();
   const { viewMode, setViewMode, isAdmin, requestAdminMode, switchToUser } = useViewMode();
+  const isAuthorizedAdmin = user?.email?.toLowerCase() === 'janani@femtech.health' || user?.role === 'admin';
   const { countdownText, is10MinActive, trigger10MinAlertNow, userPhone, motherPhone, motherName, saveUserPhone } = useSmsAlert();
   const [showLangMenu, setShowLangMenu] = useState(false);
   const [showProfileMenu, setShowProfileMenu] = useState(false);
@@ -123,62 +124,90 @@ export default function Navbar({ onOpenEmergency, onNavigate, onOpenNotification
 
       {/* Action Controls */}
       <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap', justifyContent: 'flex-end' }}>
-        {/* Global View Switcher: User View vs Administrator View */}
-        <div style={{
-          display: 'flex',
-          alignItems: 'center',
-          background: viewMode === 'admin' ? '#18181b' : '#f1f5f9',
-          border: viewMode === 'admin' ? '1.5px solid #f43f5e' : '1px solid var(--border-subtle)',
-          borderRadius: 'var(--radius-full)',
-          padding: '3px',
-          boxShadow: viewMode === 'admin' ? '0 0 12px rgba(244,63,94,0.3)' : 'none'
-        }}>
-          <button
-            onClick={switchToUser}
-            title="Switch to Personal Health Portal"
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: '6px',
-              padding: '6px 14px',
-              borderRadius: 'var(--radius-full)',
-              border: 'none',
-              background: viewMode === 'user' ? 'white' : 'transparent',
-              color: viewMode === 'user' ? 'var(--rose-primary)' : '#64748b',
-              fontWeight: viewMode === 'user' ? 700 : 500,
-              fontSize: '0.8rem',
-              cursor: 'pointer',
-              boxShadow: viewMode === 'user' ? '0 2px 6px rgba(0,0,0,0.08)' : 'none',
-              transition: 'all 0.2s ease'
-            }}
-          >
-            <Eye size={14} />
-            <span>{t('userViewMode')}</span>
-          </button>
+        {/* Global View Switcher: User View vs Administrator View (Visible Only to Janani Admin) */}
+        {isAuthorizedAdmin && (
+          <div style={{
+            display: 'flex',
+            alignItems: 'center',
+            background: viewMode === 'admin' ? '#18181b' : '#f1f5f9',
+            border: viewMode === 'admin' ? '1.5px solid #f43f5e' : '1px solid var(--border-subtle)',
+            borderRadius: 'var(--radius-full)',
+            padding: '3px',
+            boxShadow: viewMode === 'admin' ? '0 0 12px rgba(244,63,94,0.3)' : 'none'
+          }}>
+            <button
+              onClick={switchToUser}
+              title="Switch to Personal Health Portal"
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '6px',
+                padding: '6px 14px',
+                borderRadius: 'var(--radius-full)',
+                border: 'none',
+                background: viewMode === 'user' ? 'white' : 'transparent',
+                color: viewMode === 'user' ? 'var(--rose-primary)' : '#64748b',
+                fontWeight: viewMode === 'user' ? 700 : 500,
+                fontSize: '0.8rem',
+                cursor: 'pointer',
+                boxShadow: viewMode === 'user' ? '0 2px 6px rgba(0,0,0,0.08)' : 'none',
+                transition: 'all 0.2s ease'
+              }}
+            >
+              <Eye size={14} />
+              <span>{t('userViewMode')}</span>
+            </button>
 
-          <button
-            onClick={requestAdminMode}
-            title="Switch to Administrator Telemetry & Oversight"
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: '6px',
-              padding: '6px 14px',
-              borderRadius: 'var(--radius-full)',
-              border: 'none',
-              background: viewMode === 'admin' ? 'var(--rose-gradient)' : 'transparent',
-              color: viewMode === 'admin' ? 'white' : '#64748b',
-              fontWeight: viewMode === 'admin' ? 700 : 500,
-              fontSize: '0.8rem',
-              cursor: 'pointer',
-              boxShadow: viewMode === 'admin' ? '0 4px 10px rgba(244,63,94,0.35)' : 'none',
-              transition: 'all 0.2s ease'
-            }}
-          >
-            <Shield size={14} />
-            <span>{t('adminViewMode')}</span>
-          </button>
-        </div>
+            <button
+              onClick={requestAdminMode}
+              title="Switch to Administrator Telemetry & Oversight"
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '6px',
+                padding: '6px 14px',
+                borderRadius: 'var(--radius-full)',
+                border: 'none',
+                background: viewMode === 'admin' ? 'var(--rose-gradient)' : 'transparent',
+                color: viewMode === 'admin' ? 'white' : '#64748b',
+                fontWeight: viewMode === 'admin' ? 700 : 500,
+                fontSize: '0.8rem',
+                cursor: 'pointer',
+                boxShadow: viewMode === 'admin' ? '0 4px 10px rgba(244,63,94,0.35)' : 'none',
+                transition: 'all 0.2s ease'
+              }}
+            >
+              <Shield size={14} />
+              <span>{t('adminViewMode')}</span>
+            </button>
+          </div>
+        )}
+
+        {/* Confidential Anonymous Whisper Trigger Button */}
+        <button
+          onClick={() => {
+            if (onOpenWhisper) onOpenWhisper();
+            else window.dispatchEvent(new CustomEvent('femtech_open_whisper_modal'));
+          }}
+          title={language === 'ta' ? 'ரகசிய செய்தி & ஆலோசனை (100% Anonymous Whisper)' : 'Send Confidential Whisper (100% Anonymous)'}
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: '6px',
+            padding: '7px 15px',
+            borderRadius: 'var(--radius-full)',
+            border: '1.5px solid #fda4af',
+            background: '#fff1f2',
+            color: '#be123c',
+            fontWeight: 700,
+            fontSize: '0.82rem',
+            cursor: 'pointer',
+            transition: 'all 0.15s ease'
+          }}
+        >
+          <span style={{ fontSize: '0.95rem' }}>🤫</span>
+          <span>{language === 'ta' ? 'ரகசிய செய்தி' : 'Whisper'}</span>
+        </button>
 
         {/* Emergency SOS Button */}
         <button

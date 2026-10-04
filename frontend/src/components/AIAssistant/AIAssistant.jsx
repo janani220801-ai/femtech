@@ -38,14 +38,71 @@ export default function AIAssistant({ onOpenEmergency }) {
   const fileInputRef = useRef(null);
   const docInputRef = useRef(null);
 
-  // Voice Recording State
+  // Comprehensive Speech-to-Text Language Locale Map
+  const SPEECH_LANG_MAP = {
+    ta: 'ta-IN',
+    hi: 'hi-IN',
+    te: 'te-IN',
+    kn: 'kn-IN',
+    ml: 'ml-IN',
+    mr: 'mr-IN',
+    bn: 'bn-IN',
+    gu: 'gu-IN',
+    pa: 'pa-IN',
+    ur: 'ur-PK',
+    as: 'as-IN',
+    or: 'or-IN',
+    ne: 'ne-NP',
+    sd: 'sd-IN',
+    mai: 'hi-IN',
+    sat: 'hi-IN',
+    ks: 'ur-PK',
+    kok: 'mr-IN',
+    doi: 'hi-IN',
+    brx: 'as-IN',
+    mni: 'bn-IN',
+    mwr: 'hi-IN',
+    bho: 'hi-IN',
+    mag: 'hi-IN',
+    tcy: 'kn-IN',
+    kha: 'en-IN',
+    lus: 'en-IN',
+    gom: 'mr-IN',
+    ps: 'ps-AF',
+    prs: 'fa-AF',
+    fa: 'fa-IR',
+    bal: 'ur-PK',
+    skr: 'ur-PK',
+    ar: 'ar-SA',
+    lb: 'ar-LB',
+    arz: 'ar-EG',
+    fr: 'fr-FR',
+    es: 'es-ES',
+    de: 'de-DE',
+    ru: 'ru-RU',
+    zh: 'zh-CN',
+    ja: 'ja-JP',
+    ko: 'ko-KR',
+    pt: 'pt-BR',
+    it: 'it-IT',
+    tr: 'tr-TR',
+    id: 'id-ID',
+    ms: 'ms-MY',
+    sw: 'sw-KE',
+    en: 'en-US'
+  };
+
+  // Voice Recording & Speech Recognition State
   const [isRecording, setIsRecording] = useState(false);
   const [isPaused, setIsPaused] = useState(false);
   const [recordingSeconds, setRecordingSeconds] = useState(0);
+  const [liveTranscript, setLiveTranscript] = useState('');
+  const [speechNotice, setSpeechNotice] = useState('');
   const timerRef = useRef(null);
   const mediaRecorderRef = useRef(null);
   const audioChunksRef = useRef([]);
   const [recordedAudioBlob, setRecordedAudioBlob] = useState(null);
+  const recognitionRef = useRef(null);
 
   const messagesEndRef = useRef(null);
 
@@ -101,7 +158,6 @@ export default function AIAssistant({ onOpenEmergency }) {
       try {
         const res = await api.get('/ai/history');
         if (res.success && res.messages?.length > 0) {
-          // If history only has old legacy welcome or if it's new session, ensure friendly greeting
           setMessages(res.messages);
         } else {
           setMessages([
@@ -132,93 +188,155 @@ export default function AIAssistant({ onOpenEmergency }) {
     scrollToBottom();
   }, [messages, loading]);
 
-  // Voice Recording Handlers
+  // Voice Recording Handlers with Real-time Speech-to-Text
   const startRecording = async () => {
+    setSpeechNotice('');
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+
+    if (!SpeechRecognition && (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia)) {
+      setSpeechNotice(language === 'ta' ? 'குரல் உள்ளீடு உங்கள் பிரவுசரில் ஆதரிக்கப்படவில்லை.' : 'Voice input not supported in this browser.');
+      setTimeout(() => setSpeechNotice(''), 4000);
+      return;
+    }
+
     try {
-      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-      mediaRecorderRef.current = new MediaRecorder(stream);
-      audioChunksRef.current = [];
-
-      mediaRecorderRef.current.ondataavailable = (event) => {
-        if (event.data.size > 0) {
-          audioChunksRef.current.push(event.data);
-        }
-      };
-
-      mediaRecorderRef.current.onstop = () => {
-        const audioBlob = new Blob(audioChunksRef.current, { type: 'audio/webm' });
-        setRecordedAudioBlob(audioBlob);
-        stream.getTracks().forEach((track) => track.stop());
-      };
-
-      mediaRecorderRef.current.start();
-      setIsRecording(true);
-      setIsPaused(false);
-      setRecordingSeconds(0);
-
-      timerRef.current = setInterval(() => {
-        setRecordingSeconds((prev) => prev + 1);
-      }, 1000);
-
-      // Attempt Browser SpeechRecognition for Real-time Transcription if available
-      const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+      // 1. Start Web Speech Recognition
       if (SpeechRecognition) {
+        try {
+          if (recognitionRef.current) {
+            recognitionRef.current.abort();
+          }
+        } catch (e) {}
+
         const recognition = new SpeechRecognition();
-        recognition.lang = language === 'ta' ? 'ta-IN' : language === 'hi' ? 'hi-IN' : language === 'te' ? 'te-IN' : 'en-US';
+        const targetLocale = SPEECH_LANG_MAP[language] || 'en-US';
+        recognition.lang = targetLocale;
         recognition.continuous = true;
         recognition.interimResults = true;
+        recognition.maxAlternatives = 1;
+
+        recognition.onstart = () => {
+          setIsRecording(true);
+          setIsPaused(false);
+          setLiveTranscript('');
+          setRecordingSeconds(0);
+          if (timerRef.current) clearInterval(timerRef.current);
+          timerRef.current = setInterval(() => {
+            setRecordingSeconds((prev) => prev + 1);
+          }, 1000);
+        };
 
         recognition.onresult = (event) => {
-          let transcript = '';
-          for (let i = event.resultIndex; i < event.results.length; ++i) {
-            transcript += event.results[i][0].transcript;
+          let interim = '';
+          let finalStr = '';
+          for (let i = 0; i < event.results.length; ++i) {
+            if (event.results[i].isFinal) {
+              finalStr += event.results[i][0].transcript + ' ';
+            } else {
+              interim += event.results[i][0].transcript;
+            }
           }
-          if (transcript) setInputText(transcript);
+          const combined = (finalStr + interim).trim();
+          setLiveTranscript(combined);
+          if (combined) {
+            setInputText(combined);
+          }
         };
+
+        recognition.onerror = (event) => {
+          console.warn('Speech recognition notice:', event.error);
+          if (event.error === 'not-allowed') {
+            setSpeechNotice(language === 'ta' ? 'மைக்ரோஃபோன் அனுமதி தேவை (Microphone permission needed).' : 'Please grant microphone permissions.');
+          }
+        };
+
+        recognition.onend = () => {
+          // If stopped intentionally, recording state is reset in stopRecording
+        };
+
         recognition.start();
-        mediaRecorderRef.current._recognition = recognition;
+        recognitionRef.current = recognition;
+      }
+
+      // 2. Start MediaRecorder for audio playback preview if accessible
+      if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+        try {
+          const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+          mediaRecorderRef.current = new MediaRecorder(stream);
+          audioChunksRef.current = [];
+
+          mediaRecorderRef.current.ondataavailable = (event) => {
+            if (event.data.size > 0) {
+              audioChunksRef.current.push(event.data);
+            }
+          };
+
+          mediaRecorderRef.current.onstop = () => {
+            const audioBlob = new Blob(audioChunksRef.current, { type: 'audio/webm' });
+            setRecordedAudioBlob(audioBlob);
+            stream.getTracks().forEach((track) => track.stop());
+          };
+
+          mediaRecorderRef.current.start();
+          if (!SpeechRecognition) {
+            setIsRecording(true);
+            setIsPaused(false);
+            setRecordingSeconds(0);
+            if (timerRef.current) clearInterval(timerRef.current);
+            timerRef.current = setInterval(() => {
+              setRecordingSeconds((prev) => prev + 1);
+            }, 1000);
+          }
+        } catch (mediaErr) {
+          console.warn('MediaRecorder audio stream fallback:', mediaErr.message);
+        }
       }
     } catch (err) {
-      alert('Microphone access denied or not supported in this browser.');
+      console.error('Error starting speech:', err);
+      setSpeechNotice(language === 'ta' ? 'மைக்ரோஃபோன் அனுமதி தேவை.' : 'Microphone access required.');
+      setTimeout(() => setSpeechNotice(''), 4000);
     }
   };
 
   const pauseRecording = () => {
-    if (mediaRecorderRef.current && isRecording && !isPaused) {
+    if (mediaRecorderRef.current && isRecording && !isPaused && mediaRecorderRef.current.state === 'recording') {
       mediaRecorderRef.current.pause();
-      setIsPaused(true);
-      clearInterval(timerRef.current);
     }
+    setIsPaused(true);
+    if (timerRef.current) clearInterval(timerRef.current);
   };
 
   const resumeRecording = () => {
-    if (mediaRecorderRef.current && isRecording && isPaused) {
+    if (mediaRecorderRef.current && isRecording && isPaused && mediaRecorderRef.current.state === 'paused') {
       mediaRecorderRef.current.resume();
-      setIsPaused(false);
-      timerRef.current = setInterval(() => {
-        setRecordingSeconds((prev) => prev + 1);
-      }, 1000);
     }
+    setIsPaused(false);
+    timerRef.current = setInterval(() => {
+      setRecordingSeconds((prev) => prev + 1);
+    }, 1000);
   };
 
   const stopRecording = () => {
-    if (mediaRecorderRef.current && isRecording) {
-      mediaRecorderRef.current.stop();
-      if (mediaRecorderRef.current._recognition) {
-        mediaRecorderRef.current._recognition.stop();
-      }
-      setIsRecording(false);
-      setIsPaused(false);
-      clearInterval(timerRef.current);
+    if (recognitionRef.current) {
+      try {
+        recognitionRef.current.stop();
+      } catch (e) {}
     }
+    if (mediaRecorderRef.current && mediaRecorderRef.current.state !== 'inactive') {
+      try {
+        mediaRecorderRef.current.stop();
+      } catch (e) {}
+    }
+    setIsRecording(false);
+    setIsPaused(false);
+    if (timerRef.current) clearInterval(timerRef.current);
   };
 
   const deleteRecording = () => {
-    if (isRecording) {
-      stopRecording();
-    }
+    stopRecording();
     setRecordedAudioBlob(null);
     setRecordingSeconds(0);
+    setLiveTranscript('');
   };
 
   // Image & Document Handlers
@@ -678,59 +796,65 @@ export default function AIAssistant({ onOpenEmergency }) {
   };
 
   return (
-    <div style={{ maxWidth: '960px', margin: '0 auto', padding: '24px 16px', display: 'flex', flexDirection: 'column', height: 'calc(100vh - 120px)' }}>
+    <div style={{ maxWidth: '1200px', width: '100%', margin: '0 auto', padding: '16px 12px 28px 12px', display: 'flex', flexDirection: 'column', height: 'calc(100vh - 80px)', minHeight: '720px' }}>
       {/* Assistant Header & Language Selector */}
       <div className="glass-card" style={{
         padding: '16px 24px',
         borderRadius: 'var(--radius-lg)',
         background: 'white',
-        border: '1px solid var(--pink-200)',
+        border: '1.5px solid var(--pink-200)',
         display: 'flex',
         flexWrap: 'wrap',
         alignItems: 'center',
         justifyContent: 'space-between',
-        gap: '12px',
-        marginBottom: '16px'
+        gap: '14px',
+        marginBottom: '14px',
+        boxShadow: '0 4px 20px rgba(244, 63, 94, 0.06)'
       }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
           <div style={{
-            width: '46px',
-            height: '46px',
-            borderRadius: '16px',
+            width: '52px',
+            height: '52px',
+            borderRadius: '18px',
             background: 'var(--rose-gradient)',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
             color: 'white',
-            boxShadow: '0 4px 12px rgba(244, 63, 94, 0.35)'
+            boxShadow: '0 6px 16px rgba(244, 63, 94, 0.35)'
           }}>
-            <Bot size={26} />
+            <Bot size={30} />
           </div>
           <div>
-            <h2 style={{ fontSize: '1.25rem', color: 'var(--navy-dark)' }}>
-              FT Chatbox
-            </h2>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.75rem', color: '#059669', fontWeight: 600 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <h2 style={{ fontSize: '1.4rem', fontWeight: 800, color: 'var(--navy-dark)', margin: 0 }}>
+                FT Chatbox
+              </h2>
+              <span style={{ fontSize: '0.74rem', background: '#ecfdf5', color: '#047857', padding: '2px 8px', borderRadius: '12px', fontWeight: 700, border: '1px solid #a7f3d0' }}>
+                AI Doctor Active
+              </span>
+            </div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.8rem', color: '#059669', fontWeight: 600, marginTop: '2px' }}>
               <span style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#10b981' }} />
-              Doctor Consultation & Medical Chat
+              {language === 'ta' ? 'அன்பான பெண் மருத்துவர் ஆலோசனை மையம் • தமிழ் குரல் ஆதரவு' : 'Comprehensive Women’s Health Consultation & Multilingual Voice Care'}
             </div>
           </div>
         </div>
 
         {/* Caring Doctor Badge & Action */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
           <div style={{
             display: 'flex',
             alignItems: 'center',
             gap: '8px',
             background: 'rgba(255, 241, 242, 0.95)',
-            border: '1px solid var(--pink-200)',
-            padding: '6px 14px',
+            border: '1.5px solid var(--pink-200)',
+            padding: '8px 16px',
             borderRadius: 'var(--radius-full)',
             boxShadow: '0 2px 8px rgba(244, 63, 94, 0.08)'
           }}>
-            <span style={{ fontSize: '1.05rem' }}>👩‍⚕️</span>
-            <span style={{ fontSize: '0.82rem', fontWeight: 700, color: 'var(--pink-700)' }}>
+            <span style={{ fontSize: '1.15rem' }}>👩‍⚕️</span>
+            <span style={{ fontSize: '0.86rem', fontWeight: 700, color: 'var(--pink-700)' }}>
               {language === 'ta' ? 'அன்பான மருத்துவர் ஆன்லைன் 🌸' : 'Caring Doctor Online 🌸'}
             </span>
             <span style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#10b981', boxShadow: '0 0 0 2px #d1fae5' }} />
@@ -956,65 +1080,105 @@ export default function AIAssistant({ onOpenEmergency }) {
         </div>
       )}
 
-      {/* VOICE RECORDING ACTIVE STATUS BAR */}
-      {isRecording && (
+      {/* SPEECH NOTICE BANNER */}
+      {speechNotice && (
         <div style={{
-          background: '#fee2e2',
-          border: '1px solid #fca5a5',
-          borderRadius: 'var(--radius-md)',
+          background: '#fff1f2',
+          border: '1.5px solid #fecdd3',
+          color: '#be123c',
           padding: '10px 16px',
+          borderRadius: '12px',
+          fontSize: '0.85rem',
+          fontWeight: 600,
           marginBottom: '10px',
           display: 'flex',
           alignItems: 'center',
-          justifyContent: 'space-between'
+          gap: '8px'
         }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-            <span style={{ width: '12px', height: '12px', borderRadius: '50%', background: '#dc2626' }} className="animate-glow" />
-            <strong style={{ fontSize: '0.88rem', color: '#991b1b' }}>
-              {isPaused ? 'Recording Paused' : 'Recording Voice Input...'} ({formatTimer(recordingSeconds)})
-            </strong>
-          </div>
-
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-            {isPaused ? (
-              <button onClick={resumeRecording} className="btn-secondary" style={{ padding: '6px 12px', fontSize: '0.78rem' }}>
-                <Play size={14} /> Resume
-              </button>
-            ) : (
-              <button onClick={pauseRecording} className="btn-secondary" style={{ padding: '6px 12px', fontSize: '0.78rem' }}>
-                <Pause size={14} /> Pause
-              </button>
-            )}
-            <button onClick={stopRecording} className="btn-secondary" style={{ padding: '6px 12px', fontSize: '0.78rem', color: '#dc2626' }}>
-              <Square size={14} /> Stop
-            </button>
-            <button onClick={deleteRecording} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#dc2626' }}>
-              <Trash2 size={16} />
-            </button>
-          </div>
+          <Mic size={16} />
+          <span>{speechNotice}</span>
         </div>
       )}
 
-      {/* INPUT TOOLBAR */}
+      {/* LIVE VOICE RECORDING ACTIVE STATUS BAR & REAL-TIME SPEECH PREVIEW */}
+      {isRecording && (
+        <div style={{
+          background: '#fef2f2',
+          border: '2px solid #f87171',
+          borderRadius: '16px',
+          padding: '12px 18px',
+          marginBottom: '10px',
+          display: 'flex',
+          flexDirection: 'column',
+          gap: '8px',
+          boxShadow: '0 4px 16px rgba(239, 68, 68, 0.15)'
+        }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '8px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+              <span style={{ width: '12px', height: '12px', borderRadius: '50%', background: '#dc2626' }} className="animate-glow" />
+              <strong style={{ fontSize: '0.92rem', color: '#991b1b' }}>
+                {isPaused ? 'Recording Paused' : 'Listening & Transcribing Voice...'} ({formatTimer(recordingSeconds)})
+              </strong>
+              <span style={{ fontSize: '0.74rem', background: '#fee2e2', color: '#991b1b', padding: '2px 8px', borderRadius: '10px', fontWeight: 700 }}>
+                {SPEECH_LANG_MAP[language] || 'en-US'}
+              </span>
+            </div>
+
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              {isPaused ? (
+                <button onClick={resumeRecording} className="btn-secondary" style={{ padding: '6px 14px', fontSize: '0.82rem' }}>
+                  <Play size={14} /> Resume
+                </button>
+              ) : (
+                <button onClick={pauseRecording} className="btn-secondary" style={{ padding: '6px 14px', fontSize: '0.82rem' }}>
+                  <Pause size={14} /> Pause
+                </button>
+              )}
+              <button onClick={stopRecording} className="btn-secondary" style={{ padding: '6px 14px', fontSize: '0.82rem', color: '#dc2626', fontWeight: 700 }}>
+                <Square size={14} /> Done
+              </button>
+              <button onClick={deleteRecording} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#dc2626' }}>
+                <Trash2 size={18} />
+              </button>
+            </div>
+          </div>
+
+          {liveTranscript && (
+            <div style={{
+              background: 'white',
+              padding: '8px 12px',
+              borderRadius: '8px',
+              fontSize: '0.88rem',
+              color: '#374151',
+              fontStyle: 'italic',
+              border: '1px solid #fecaca'
+            }}>
+              "{liveTranscript}"
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* ENLARGED INPUT TOOLBAR */}
       <div style={{
         display: 'flex',
         alignItems: 'center',
-        gap: '8px',
+        gap: '10px',
         background: 'white',
         borderRadius: 'var(--radius-full)',
-        padding: '6px 10px',
-        border: '1px solid var(--pink-200)',
-        boxShadow: 'var(--shadow-md)'
+        padding: '8px 14px',
+        border: '2px solid var(--pink-300)',
+        boxShadow: '0 6px 20px rgba(244, 63, 94, 0.12)'
       }}>
         {/* Photo Upload Button */}
         <input type="file" accept="image/*" ref={fileInputRef} style={{ display: 'none' }} onChange={handleImageSelect} />
         <button
           type="button"
           onClick={() => fileInputRef.current.click()}
-          style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '8px', color: 'var(--text-secondary)' }}
+          style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '10px', color: 'var(--text-secondary)' }}
           title="Upload Medical Image / Prescription"
         >
-          <ImageIcon size={20} />
+          <ImageIcon size={22} />
         </button>
 
         {/* PDF Document Upload Button */}
@@ -1022,10 +1186,10 @@ export default function AIAssistant({ onOpenEmergency }) {
         <button
           type="button"
           onClick={() => docInputRef.current.click()}
-          style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '8px', color: 'var(--text-secondary)' }}
+          style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '10px', color: 'var(--text-secondary)' }}
           title="Upload PDF Lab Report"
         >
-          <Paperclip size={20} />
+          <Paperclip size={22} />
         </button>
 
         {/* Voice Input Microphone Button */}
@@ -1036,18 +1200,19 @@ export default function AIAssistant({ onOpenEmergency }) {
             background: isRecording ? '#dc2626' : 'var(--pink-100)',
             border: 'none',
             borderRadius: '50%',
-            width: '36px',
-            height: '36px',
+            width: '44px',
+            height: '44px',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
             cursor: 'pointer',
             color: isRecording ? 'white' : 'var(--pink-600)',
-            transition: 'var(--transition)'
+            transition: 'var(--transition)',
+            boxShadow: isRecording ? '0 0 12px rgba(220, 38, 38, 0.5)' : 'none'
           }}
-          title="Record Voice Note"
+          title={isRecording ? "Stop Voice Recording" : "Speak to Doctor in Your Language (Voice Input)"}
         >
-          <Mic size={18} />
+          <Mic size={22} />
         </button>
 
         {/* Text Message Input Field */}
@@ -1060,24 +1225,25 @@ export default function AIAssistant({ onOpenEmergency }) {
           }}
           placeholder={
             language === 'ta'
-              ? 'உங்கள் உடல்நல அறிகுறிகள் அல்லது சந்தேகங்களை மருத்துவரிடம் கேளுங்கள்...'
+              ? 'உங்கள் உடல்நல அறிகுறிகள் அல்லது சந்தேகங்களை மருத்துவரிடம் கேளுங்கள் / பேசுங்கள்...'
               : language === 'hi'
-              ? 'अपने लक्षणों या स्वास्थ्य संबंधी सवाल डॉक्टर से पूछें...'
+              ? 'अपने लक्षणों या स्वास्थ्य संबंधी सवाल डॉक्टर से पूछें या बोलें...'
               : language === 'te'
               ? 'మీ ఆరోగ్య సమస్య లేదా లక్షణాలను డాక్టర్‌ను అడగండి...'
               : language === 'fr'
               ? 'Posez votre question médicale ou décrivez vos symptômes...'
               : language === 'ar' || language === 'lb'
               ? 'اطرحي سؤالكِ الطبي أو صفي أعراضكِ للطبيبة...'
-              : 'Ask your doctor assistant about your symptoms, pain, cramps, or health concerns...'
+              : 'Ask or speak to your doctor assistant about symptoms, pain, cramps, or concerns...'
           }
           style={{
             flex: 1,
             border: 'none',
             outline: 'none',
-            fontSize: '0.92rem',
-            padding: '8px 4px',
-            fontFamily: 'inherit'
+            fontSize: '1rem',
+            padding: '10px 8px',
+            fontFamily: 'inherit',
+            color: 'var(--text-primary)'
           }}
         />
 
@@ -1090,17 +1256,17 @@ export default function AIAssistant({ onOpenEmergency }) {
             background: 'var(--rose-gradient)',
             border: 'none',
             borderRadius: '50%',
-            width: '40px',
-            height: '40px',
+            width: '46px',
+            height: '46px',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
             cursor: 'pointer',
             color: 'white',
-            boxShadow: '0 4px 10px rgba(244, 63, 94, 0.35)'
+            boxShadow: '0 4px 12px rgba(244, 63, 94, 0.4)'
           }}
         >
-          <Send size={18} />
+          <Send size={20} />
         </button>
       </div>
 

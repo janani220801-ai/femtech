@@ -11,7 +11,11 @@ export default function AmbientPetalsCanvas() {
   const canvasRef = useRef(null);
   const themeContext = useTheme();
   const activeTheme = themeContext?.theme || 'cherry-red';
-  const [enabled, setEnabled] = useState(true);
+  const animationMode = themeContext?.animationMode || 'rich';
+
+  if (animationMode === 'none') {
+    return null;
+  }
 
   useEffect(() => {
     if (!enabled) return;

@@ -4,25 +4,64 @@ import { useAuth } from './AuthContext';
 const LanguageContext = createContext(null);
 
 export const SUPPORTED_LANGUAGES = [
+  // Major & Universal
   { code: 'en', label: 'English', native: 'English', dir: 'ltr' },
-  { code: 'ta', label: 'Tamil', native: 'தமிழ்', dir: 'ltr' },
-  { code: 'hi', label: 'Hindi', native: 'हिन्दी', dir: 'ltr' },
-  { code: 'te', label: 'Telugu', native: 'తెలుగు', dir: 'ltr' },
-  { code: 'ml', label: 'Malayalam', native: 'മലയാളം', dir: 'ltr' },
-  { code: 'mr', label: 'Marathi', native: 'मराठी', dir: 'ltr' },
-  { code: 'mwr', label: 'Marwadi', native: 'मारवाड़ी', dir: 'ltr' },
-  { code: 'fr', label: 'French', native: 'Français', dir: 'ltr' },
-  { code: 'lb', label: 'Lebanese', native: 'اللبنانية (Lebanese)', dir: 'rtl' },
-  { code: 'ar', label: 'Arabic', native: 'العربية (Arabic)', dir: 'rtl' },
-  { code: 'kn', label: 'Kannada', native: 'ಕನ್ನಡ', dir: 'ltr' },
-  { code: 'gu', label: 'Gujarati', native: 'ગુજરાતી', dir: 'ltr' },
-  { code: 'bn', label: 'Bengali', native: 'বাংলা', dir: 'ltr' },
-  { code: 'ur', label: 'Urdu', native: 'اردو', dir: 'rtl' },
-  { code: 'pa', label: 'Punjabi', native: 'ਪੰਜਾਬੀ', dir: 'ltr' },
-  { code: 'or', label: 'Odia', native: 'ଓଡ଼ିଆ', dir: 'ltr' },
-  { code: 'es', label: 'Spanish', native: 'Español', dir: 'ltr' },
-  { code: 'de', label: 'German', native: 'Deutsch', dir: 'ltr' },
-  { code: 'ja', label: 'Japanese', native: '日本語', dir: 'ltr' }
+  { code: 'ta', label: 'Tamil', native: 'தமிழ் (Tamil)', dir: 'ltr' },
+  { code: 'hi', label: 'Hindi', native: 'हिन्दी (Hindi)', dir: 'ltr' },
+  { code: 'te', label: 'Telugu', native: 'తెలుగు (Telugu)', dir: 'ltr' },
+  { code: 'kn', label: 'Kannada', native: 'ಕನ್ನಡ (Kannada)', dir: 'ltr' },
+  { code: 'ml', label: 'Malayalam', native: 'മലയാളം (Malayalam)', dir: 'ltr' },
+  { code: 'mr', label: 'Marathi', native: 'मराठी (Marathi)', dir: 'ltr' },
+  { code: 'bn', label: 'Bengali', native: 'বাংলা (Bengali)', dir: 'ltr' },
+  { code: 'gu', label: 'Gujarati', native: 'ગુજરાતી (Gujarati)', dir: 'ltr' },
+  { code: 'pa', label: 'Punjabi (Gurmukhi)', native: 'ਪੰਜਾਬੀ (Punjabi)', dir: 'ltr' },
+  { code: 'or', label: 'Odia', native: 'ଓଡ଼ିଆ (Odia)', dir: 'ltr' },
+  { code: 'as', label: 'Assamese', native: 'অসমীয়া (Assamese)', dir: 'ltr' },
+  { code: 'ur', label: 'Urdu', native: 'اردو (Urdu)', dir: 'rtl' },
+  { code: 'sa', label: 'Sanskrit', native: 'संस्कृतम् (Sanskrit)', dir: 'ltr' },
+  { code: 'mai', label: 'Maithili', native: 'मैथिली (Maithili)', dir: 'ltr' },
+  { code: 'sat', label: 'Santali', native: 'ᱥᱟᱱᱛᱟᱲᱤ (Santali)', dir: 'ltr' },
+  { code: 'ks', label: 'Kashmiri', native: 'کٲشُر / कॉशुर (Kashmiri)', dir: 'rtl' },
+  { code: 'ne', label: 'Nepali', native: 'नेपाली (Nepali)', dir: 'ltr' },
+  { code: 'kok', label: 'Konkani', native: 'कोंकणी (Konkani)', dir: 'ltr' },
+  { code: 'sd', label: 'Sindhi', native: 'سنڌي / सिन्धी (Sindhi)', dir: 'rtl' },
+  { code: 'doi', label: 'Dogri', native: 'डोगरी (Dogri)', dir: 'ltr' },
+  { code: 'brx', label: 'Bodo', native: 'बड़ो (Bodo)', dir: 'ltr' },
+  { code: 'mni', label: 'Manipuri (Meitei)', native: 'মৈতৈলোন্ (Manipuri)', dir: 'ltr' },
+  { code: 'mwr', label: 'Marwadi', native: 'मारवाड़ी (Marwadi)', dir: 'ltr' },
+  { code: 'bho', label: 'Bhojpuri', native: 'भोजपुरी (Bhojpuri)', dir: 'ltr' },
+  { code: 'mag', label: 'Magahi', native: 'मगही (Magahi)', dir: 'ltr' },
+  { code: 'tcy', label: 'Tulu', native: 'ತುಳು (Tulu)', dir: 'ltr' },
+  { code: 'kha', label: 'Khasi', native: 'Khasi (Meghalaya)', dir: 'ltr' },
+  { code: 'lus', label: 'Mizo', native: 'Mizo ṭawng', dir: 'ltr' },
+  { code: 'gom', label: 'Goan Konkani', native: 'Gõychi Konknni', dir: 'ltr' },
+
+  // Afghanistan, Pakistan & Regional Languages
+  { code: 'ps', label: 'Pashto', native: 'پښتو (Pashto - Afghanistan/PK)', dir: 'rtl' },
+  { code: 'prs', label: 'Dari / Afghan Persian', native: 'دری (Dari - Afghanistan)', dir: 'rtl' },
+  { code: 'fa', label: 'Persian / Farsi', native: 'فارسی (Persian)', dir: 'rtl' },
+  { code: 'bal', label: 'Balochi', native: 'بلوچی (Balochi)', dir: 'rtl' },
+  { code: 'skr', label: 'Saraiki', native: 'سرائیکی (Saraiki)', dir: 'rtl' },
+
+  // Arabic & Middle East
+  { code: 'ar', label: 'Arabic (Modern Standard)', native: 'العربية (Arabic)', dir: 'rtl' },
+  { code: 'lb', label: 'Lebanese Arabic', native: 'اللبنانية (Lebanese)', dir: 'rtl' },
+  { code: 'arz', label: 'Egyptian Arabic', native: 'المصرية (Egyptian Arabic)', dir: 'rtl' },
+
+  // Worldwide International Languages
+  { code: 'fr', label: 'French', native: 'Français (French)', dir: 'ltr' },
+  { code: 'es', label: 'Spanish', native: 'Español (Spanish)', dir: 'ltr' },
+  { code: 'de', label: 'German', native: 'Deutsch (German)', dir: 'ltr' },
+  { code: 'ru', label: 'Russian', native: 'Русский (Russian)', dir: 'ltr' },
+  { code: 'zh', label: 'Chinese (Simplified)', native: '中文 (Chinese)', dir: 'ltr' },
+  { code: 'ja', label: 'Japanese', native: '日本語 (Japanese)', dir: 'ltr' },
+  { code: 'ko', label: 'Korean', native: '한국어 (Korean)', dir: 'ltr' },
+  { code: 'pt', label: 'Portuguese', native: 'Português (Portuguese)', dir: 'ltr' },
+  { code: 'it', label: 'Italian', native: 'Italiano (Italian)', dir: 'ltr' },
+  { code: 'tr', label: 'Turkish', native: 'Türkçe (Turkish)', dir: 'ltr' },
+  { code: 'id', label: 'Indonesian', native: 'Bahasa Indonesia', dir: 'ltr' },
+  { code: 'ms', label: 'Malay', native: 'Bahasa Melayu', dir: 'ltr' },
+  { code: 'sw', label: 'Swahili', native: 'Kiswahili (East Africa)', dir: 'ltr' }
 ];
 
 export const TRANSLATIONS = {

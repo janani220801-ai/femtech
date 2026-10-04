@@ -25,7 +25,8 @@ import {
   Shield,
   ChevronDown,
   Smartphone,
-  Flame
+  Flame,
+  EyeOff
 } from 'lucide-react';
 
 export default function Sidebar({ currentTab, onNavigate }) {
@@ -106,7 +107,15 @@ export default function Sidebar({ currentTab, onNavigate }) {
       items: [
         { id: 'nearby-care', label: t('nearbyCare') || 'Urgent Care Finder', icon: Hospital },
         { id: 'divas-meeting', label: t('divasMeeting') || t('deepasMeeting') || "Diva's Sisterhood Forum", icon: Users },
-        { id: 'ai-assistant', label: t('femtechAI') || 'FT Chatbox', icon: Bot, isHighlight: true }
+        { id: 'ai-assistant', label: t('femtechAI') || 'FT Chatbox', icon: Bot, isHighlight: true },
+        {
+          id: 'anonymous-whisper',
+          label: language === 'ta' ? 'ரகசிய செய்தி (Whisper)' : 'Anonymous Whisper',
+          icon: EyeOff,
+          badge: 'Private',
+          isAction: true,
+          onClick: () => window.dispatchEvent(new CustomEvent('femtech_open_whisper_modal'))
+        }
       ]
     },
     {
