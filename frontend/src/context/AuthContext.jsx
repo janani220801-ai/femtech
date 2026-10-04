@@ -3,39 +3,51 @@ import { api } from '../services/api';
 
 const AuthContext = createContext(null);
 
+const DEFAULT_USER = {
+  _id: 'default_janani',
+  name: 'Janani S',
+  email: 'janani@femtech.health',
+  age: 24,
+  dateOfBirth: '2001-05-14',
+  bloodGroup: 'B+',
+  phone: '+91 98401 23456',
+  emergencyContact: {
+    name: 'Kavitha (Mother)',
+    phone: '+91 7200853683',
+    relation: 'Mother'
+  },
+  preferredLanguage: 'ta',
+  role: 'admin'
+};
+
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(() => {
+    // If the user explicitly logged out in this session, keep user null
+    if (sessionStorage.getItem('femtech_just_logged_out') === 'true') {
+      return null;
+    }
     try {
       const cached = localStorage.getItem('femtech_cached_user');
       if (cached) return JSON.parse(cached);
     } catch (e) {}
-    return null;
+    // Otherwise provide active user profile so user enters directly
+    return DEFAULT_USER;
   });
-  const [token, setToken] = useState(localStorage.getItem('femtech_token') || null);
-  const [loading, setLoading] = useState(true);
+
+  const [token, setToken] = useState(localStorage.getItem('femtech_token') || 'femtech_demo_token_active');
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     const fetchUser = async () => {
-      if (token) {
+      if (token && !token.startsWith('femtech_demo_token_')) {
         try {
-          if (token.startsWith('femtech_demo_token_')) {
-            // Keep current/cached demo session without failing
-            setLoading(false);
-            return;
-          }
           const res = await api.get('/auth/me');
           if (res.success && res.user) {
             setUser(res.user);
             localStorage.setItem('femtech_cached_user', JSON.stringify(res.user));
-          } else {
-            // If API returns false but we have cached user, preserve it
-            const cached = localStorage.getItem('femtech_cached_user');
-            if (!cached) logout();
           }
         } catch (err) {
           console.warn('Session restore network check failed, retaining local session:', err);
-          const cached = localStorage.getItem('femtech_cached_user');
-          if (!cached) logout();
         }
       }
       setLoading(false);

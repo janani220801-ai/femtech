@@ -436,6 +436,35 @@ export default function AuthModal({ isOpen, onClose }) {
             <AlertCircle size={15} />
             <span>🚨 SOS</span>
           </button>
+
+          {/* Quick Direct Access in Header */}
+          <button
+            type="button"
+            onClick={async () => {
+              sessionStorage.removeItem('femtech_just_logged_out');
+              setJustLoggedOut(false);
+              await instantDemoLogin(24, 'Janani S');
+              if (onClose) onClose();
+            }}
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '6px',
+              padding: '7px 14px',
+              borderRadius: '20px',
+              fontSize: '0.8rem',
+              fontWeight: 800,
+              background: 'linear-gradient(135deg, #059669 0%, #047857 100%)',
+              color: 'white',
+              border: 'none',
+              cursor: 'pointer',
+              boxShadow: '0 3px 12px rgba(5, 150, 105, 0.35)'
+            }}
+            title={isTamil ? 'உடனடியாக ஆப்-க்குள் செல்' : 'Direct App Access'}
+          >
+            <Sparkles size={14} />
+            <span>{isTamil ? '🌸 உள்ளே செல்' : '🌸 Enter App'}</span>
+          </button>
         </div>
       </header>
 
@@ -485,6 +514,33 @@ export default function AuthModal({ isOpen, onClose }) {
             </p>
 
             <div style={{ display: 'flex', justifyContent: 'center', gap: '12px', flexWrap: 'wrap' }}>
+              <button
+                type="button"
+                onClick={async () => {
+                  sessionStorage.removeItem('femtech_just_logged_out');
+                  setJustLoggedOut(false);
+                  await instantDemoLogin(24, 'Janani S');
+                  if (onClose) onClose();
+                }}
+                style={{
+                  padding: '13px 26px',
+                  borderRadius: '16px',
+                  border: 'none',
+                  background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
+                  color: 'white',
+                  fontWeight: 900,
+                  fontSize: '0.96rem',
+                  cursor: 'pointer',
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '8px',
+                  boxShadow: '0 4px 14px rgba(16, 185, 129, 0.35)'
+                }}
+              >
+                <ArrowRight size={18} />
+                <span>{isTamil ? '🌸 உடனடியாக உள்ளே செல் (Direct App Access)' : '🌸 Direct App Access (Instant Demo)'}</span>
+              </button>
+
               <button
                 type="button"
                 onClick={() => {
@@ -548,6 +604,56 @@ export default function AuthModal({ isOpen, onClose }) {
             border: '2px solid rgba(251, 113, 133, 0.35)',
             boxShadow: '0 20px 50px rgba(244, 63, 94, 0.12)'
           }}>
+            {/* Direct App Access Banner / Button */}
+            <div style={{
+              background: 'linear-gradient(135deg, #ecfdf5 0%, #f0fdf4 100%)',
+              border: '2px solid #86efac',
+              borderRadius: '18px',
+              padding: '12px 18px',
+              marginBottom: '20px',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              gap: '12px',
+              flexWrap: 'wrap'
+            }}>
+              <div>
+                <div style={{ fontWeight: 800, fontSize: '0.94rem', color: '#065f46', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                  <Sparkles size={16} color="#059669" />
+                  <span>{isTamil ? 'நேரடி அணுகல் (Direct App Access)' : 'Direct App Access / Instant Demo'}</span>
+                </div>
+                <div style={{ fontSize: '0.8rem', color: '#047857' }}>
+                  {isTamil ? 'கடவுச்சொல் இன்றி உடனடியாக FemTech டேஷ்போர்டுக்குள் செல்ல' : 'Enter the FemTech dashboard instantly with one click'}
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={async () => {
+                  sessionStorage.removeItem('femtech_just_logged_out');
+                  setJustLoggedOut(false);
+                  await instantDemoLogin(24, 'Janani S');
+                  if (onClose) onClose();
+                }}
+                style={{
+                  padding: '10px 22px',
+                  borderRadius: '12px',
+                  border: 'none',
+                  background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
+                  color: 'white',
+                  fontWeight: 900,
+                  fontSize: '0.9rem',
+                  cursor: 'pointer',
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '6px',
+                  boxShadow: '0 4px 12px rgba(16, 185, 129, 0.3)'
+                }}
+              >
+                <span>{isTamil ? '🌸 நேரடியாக உள்ளே செல்' : '🌸 Enter App Now'}</span>
+                <ArrowRight size={16} />
+              </button>
+            </div>
+
             {/* Top Tabs: SIGN IN vs CREATE ACCOUNT */}
             <div style={{
               display: 'grid',

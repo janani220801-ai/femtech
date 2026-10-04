@@ -41,7 +41,9 @@ import AnonymousWhisperModal from './components/common/AnonymousWhisperModal';
 export default function App() {
   const { user, loading } = useAuth();
   const { isAdmin } = useViewMode();
-  const [showSplash, setShowSplash] = useState(true);
+  const [showSplash, setShowSplash] = useState(() => {
+    return sessionStorage.getItem('femtech_splash_seen') !== 'true';
+  });
   const [currentTab, setCurrentTab] = useState('dashboard');
   const [showEmergencyModal, setShowEmergencyModal] = useState(false);
   const [showNotificationFeed, setShowNotificationFeed] = useState(false);
@@ -84,6 +86,9 @@ export default function App() {
     return (
       <SplashScreen
         onFinish={() => {
+          try {
+            sessionStorage.setItem('femtech_splash_seen', 'true');
+          } catch (e) {}
           setShowSplash(false);
           setShowCelebration(true);
         }}
