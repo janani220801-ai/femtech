@@ -7,19 +7,22 @@ import { LanguageProvider } from './context/LanguageContext.jsx';
 import { ThemeProvider } from './context/ThemeContext.jsx';
 import { ViewModeProvider } from './context/ViewModeContext.jsx';
 import { SmsAlertProvider } from './context/SmsAlertContext.jsx';
+import ErrorBoundary from './components/common/ErrorBoundary.jsx';
 
 ReactDOM.createRoot(document.getElementById('root')).render(
   <React.StrictMode>
-    <AuthProvider>
-      <LanguageProvider>
-        <SmsAlertProvider>
-          <ThemeProvider>
-            <ViewModeProvider>
-              <App />
-            </ViewModeProvider>
-          </ThemeProvider>
-        </SmsAlertProvider>
-      </LanguageProvider>
-    </AuthProvider>
+    <ErrorBoundary>
+      <AuthProvider>
+        <LanguageProvider>
+          <SmsAlertProvider>
+            <ThemeProvider>
+              <ViewModeProvider>
+                <App />
+              </ViewModeProvider>
+            </ThemeProvider>
+          </SmsAlertProvider>
+        </LanguageProvider>
+      </AuthProvider>
+    </ErrorBoundary>
   </React.StrictMode>
 );
