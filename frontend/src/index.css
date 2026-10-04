@@ -1,0 +1,938 @@
+:root {
+  --font-main: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+  --font-display: 'Outfit', sans-serif;
+
+  /* FemTech Soft Color Palette */
+  --bg-gradient: linear-gradient(135deg, #fff5f7 0%, #fdf2f8 50%, #faf5ff 100%);
+  --bg-card: rgba(255, 255, 255, 0.88);
+  --bg-card-hover: rgba(255, 255, 255, 0.96);
+  --bg-glass: rgba(255, 255, 255, 0.72);
+
+  --pink-50: #fff1f2;
+  --pink-100: #ffe4e6;
+  --pink-200: #fecdd3;
+  --pink-300: #fda4af;
+  --pink-400: #fb7185;
+  --pink-500: #f43f5e;
+  --pink-600: #e11d48;
+  --rose-primary: #e85d88;
+  --rose-gradient: linear-gradient(135deg, #fb7185 0%, #e85d88 50%, #f43f5e 100%);
+  --lavender-soft: #f5f3ff;
+  --lavender-accent: #c4b5fd;
+  --lavender-deep: #8b5cf6;
+
+  --navy-dark: #1e293b;
+  --text-primary: #1e293b;
+  --text-secondary: #475569;
+  --text-muted: #94a3b8;
+  --border-subtle: rgba(244, 114, 182, 0.2);
+  --border-card: rgba(255, 255, 255, 0.6);
+
+  --shadow-sm: 0 2px 8px rgba(225, 29, 72, 0.05);
+  --shadow-md: 0 8px 24px rgba(225, 29, 72, 0.08);
+  --shadow-lg: 0 16px 36px rgba(225, 29, 72, 0.12);
+  --shadow-glass: 0 8px 32px 0 rgba(232, 93, 136, 0.1);
+
+  --radius-sm: 10px;
+  --radius-md: 16px;
+  --radius-lg: 24px;
+  --radius-full: 9999px;
+  --transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* Base Reset */
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: var(--font-main);
+  background: var(--bg-gradient);
+  color: var(--text-primary);
+  min-height: 100vh;
+  -webkit-font-smoothing: antialiased;
+  overflow-x: hidden;
+}
+
+h1, h2, h3, h4, h5, h6 {
+  font-family: var(--font-display);
+  font-weight: 700;
+  color: var(--navy-dark);
+  letter-spacing: -0.015em;
+}
+
+/* Glass Card */
+.glass-card {
+  background: var(--bg-card);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid var(--border-card);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-glass);
+  transition: var(--transition);
+}
+
+.glass-card:hover {
+  box-shadow: var(--shadow-lg);
+  transform: translateY(-2px);
+}
+
+/* Primary Button */
+.btn-primary {
+  background: var(--rose-gradient);
+  color: white;
+  border: none;
+  border-radius: var(--radius-full);
+  padding: 12px 24px;
+  font-family: var(--font-display);
+  font-size: 0.95rem;
+  font-weight: 600;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  box-shadow: 0 6px 20px rgba(232, 93, 136, 0.35);
+  transition: var(--transition);
+}
+
+.btn-primary:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(232, 93, 136, 0.45);
+}
+
+.btn-primary:active {
+  transform: translateY(0);
+}
+
+/* Secondary Button */
+.btn-secondary {
+  background: white;
+  color: var(--rose-primary);
+  border: 1px solid var(--pink-200);
+  border-radius: var(--radius-full);
+  padding: 10px 20px;
+  font-family: var(--font-display);
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  transition: var(--transition);
+}
+
+.btn-secondary:hover {
+  background: var(--pink-50);
+  border-color: var(--pink-300);
+  transform: translateY(-1px);
+}
+
+/* Subtle Badge */
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 12px;
+  border-radius: var(--radius-full);
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+}
+
+.badge-pink {
+  background: var(--pink-100);
+  color: var(--pink-600);
+}
+
+.badge-lavender {
+  background: var(--lavender-soft);
+  color: var(--lavender-deep);
+}
+
+.badge-demo {
+  background: #fef3c7;
+  color: #b45309;
+  border: 1px solid #fde68a;
+}
+
+/* Floating animation */
+@keyframes floatGentle {
+  0%, 100% { transform: translateY(0px); }
+  50% { transform: translateY(-8px); }
+}
+
+@keyframes pulseGlow {
+  0%, 100% { opacity: 0.8; transform: scale(1); }
+  50% { opacity: 1; transform: scale(1.05); }
+}
+
+.animate-float {
+  animation: floatGentle 4s ease-in-out infinite;
+}
+
+.animate-glow {
+  animation: pulseGlow 2.5s ease-in-out infinite;
+}
+
+/* ============================================================ */
+/* THEMES OVERRIDES */
+/* ============================================================ */
+
+/* 🍒 Cherry Red Theme (Rich Crimson Velvet & Ruby Glow) */
+html.cherry-red,
+body.cherry-red,
+.cherry-red {
+  --bg-gradient: linear-gradient(135deg, #fff0f3 0%, #ffe4e8 45%, #fed7de 100%) !important;
+  --bg-card: rgba(255, 255, 255, 0.96) !important;
+  --bg-glass: rgba(255, 240, 243, 0.85) !important;
+  --pink-50: #fff0f3 !important;
+  --pink-100: #ffe4e8 !important;
+  --pink-200: #fecdd6 !important;
+  --pink-300: #fda4b4 !important;
+  --pink-400: #fb718b !important;
+  --pink-500: #f43f68 !important;
+  --pink-600: #e11d48 !important;
+  --rose-primary: #be123c !important;
+  --rose-gradient: linear-gradient(135deg, #e11d48 0%, #be123c 50%, #881337 100%) !important;
+  --shadow-glass: 0 8px 32px 0 rgba(190, 18, 60, 0.22) !important;
+  --shadow-sm: 0 2px 8px rgba(190, 18, 60, 0.08) !important;
+  --shadow-md: 0 8px 24px rgba(190, 18, 60, 0.15) !important;
+  --shadow-lg: 0 16px 36px rgba(190, 18, 60, 0.22) !important;
+  --border-subtle: rgba(190, 18, 60, 0.26) !important;
+  --border-card: rgba(254, 205, 214, 0.9) !important;
+  background: var(--bg-gradient) !important;
+}
+
+/* 🍷 Ruby Crimson / Deep Bordeaux Cherry Velvet (செர்ரி ரூபி) */
+html.ruby-crimson,
+body.ruby-crimson,
+.ruby-crimson {
+  --bg-gradient: linear-gradient(135deg, #ffeef2 0%, #fed7e2 45%, #fce7f3 100%) !important;
+  --bg-card: rgba(255, 255, 255, 0.96) !important;
+  --bg-glass: rgba(254, 242, 244, 0.86) !important;
+  --pink-50: #ffeef2 !important;
+  --pink-100: #fed7e2 !important;
+  --pink-200: #fbb6ce !important;
+  --pink-300: #f687b3 !important;
+  --pink-400: #ed64a6 !important;
+  --pink-500: #d53f8c !important;
+  --pink-600: #be123c !important;
+  --rose-primary: #990024 !important;
+  --rose-gradient: linear-gradient(135deg, #be123c 0%, #990024 50%, #580015 100%) !important;
+  --shadow-glass: 0 8px 32px 0 rgba(153, 0, 36, 0.25) !important;
+  --shadow-sm: 0 2px 8px rgba(153, 0, 36, 0.1) !important;
+  --shadow-md: 0 8px 24px rgba(153, 0, 36, 0.18) !important;
+  --shadow-lg: 0 16px 36px rgba(153, 0, 36, 0.26) !important;
+  --border-subtle: rgba(153, 0, 36, 0.3) !important;
+  --border-card: rgba(251, 182, 206, 0.85) !important;
+  background: var(--bg-gradient) !important;
+}
+
+/* 💙 Sapphire Blue (Ocean Serenity) */
+html.sapphire-blue,
+body.sapphire-blue,
+.sapphire-blue {
+  --bg-gradient: linear-gradient(135deg, #eff6ff 0%, #e0f2fe 50%, #f0fdf4 100%) !important;
+  --bg-card: rgba(255, 255, 255, 0.95) !important;
+  --bg-glass: rgba(239, 246, 255, 0.8) !important;
+  --pink-50: #eff6ff !important;
+  --pink-100: #dbeafe !important;
+  --pink-200: #bfdbfe !important;
+  --pink-300: #93c5fd !important;
+  --pink-400: #60a5fa !important;
+  --pink-500: #3b82f6 !important;
+  --pink-600: #2563eb !important;
+  --rose-primary: #2563eb !important;
+  --rose-gradient: linear-gradient(135deg, #60a5fa 0%, #2563eb 50%, #1d4ed8 100%) !important;
+  --shadow-glass: 0 8px 32px 0 rgba(37, 99, 235, 0.16) !important;
+  --border-subtle: rgba(96, 165, 250, 0.3) !important;
+  --border-card: rgba(191, 219, 254, 0.8) !important;
+  background: var(--bg-gradient) !important;
+}
+
+/* 🌙 Midnight Plum (Royal Amethyst) */
+html.midnight-plum,
+body.midnight-plum,
+.midnight-plum {
+  --bg-gradient: linear-gradient(135deg, #faf5ff 0%, #f3e8ff 50%, #ede9fe 100%) !important;
+  --bg-card: rgba(255, 255, 255, 0.95) !important;
+  --bg-glass: rgba(243, 232, 255, 0.8) !important;
+  --pink-50: #faf5ff !important;
+  --pink-100: #f3e8ff !important;
+  --pink-200: #e9d5ff !important;
+  --pink-300: #d8b4fe !important;
+  --pink-400: #c084fc !important;
+  --pink-500: #9333ea !important;
+  --pink-600: #7e22ce !important;
+  --rose-primary: #6b21a8 !important;
+  --rose-gradient: linear-gradient(135deg, #a855f7 0%, #7e22ce 50%, #4c1d95 100%) !important;
+  --shadow-glass: 0 8px 32px 0 rgba(107, 33, 168, 0.2) !important;
+  --border-subtle: rgba(168, 85, 247, 0.3) !important;
+  --border-card: rgba(233, 213, 255, 0.8) !important;
+  background: var(--bg-gradient) !important;
+}
+
+/* Light Lavender Theme */
+html.light-lavender,
+body.light-lavender,
+.light-lavender {
+  --bg-gradient: linear-gradient(135deg, #faf5ff 0%, #f3e8ff 50%, #ede9fe 100%) !important;
+  --bg-card: rgba(255, 255, 255, 0.94) !important;
+  --bg-glass: rgba(245, 243, 255, 0.8) !important;
+  --pink-50: #faf5ff !important;
+  --pink-100: #f3e8ff !important;
+  --pink-200: #e9d5ff !important;
+  --pink-300: #d8b4fe !important;
+  --pink-400: #c084fc !important;
+  --pink-500: #a855f7 !important;
+  --pink-600: #9333ea !important;
+  --rose-primary: #8b5cf6 !important;
+  --rose-gradient: linear-gradient(135deg, #c084fc 0%, #8b5cf6 50%, #7c3aed 100%) !important;
+  --shadow-glass: 0 8px 32px 0 rgba(139, 92, 246, 0.2) !important;
+  --border-subtle: rgba(168, 85, 247, 0.28) !important;
+  --border-card: rgba(233, 213, 255, 0.8) !important;
+  background: var(--bg-gradient) !important;
+}
+
+/* Warm Peach Theme */
+html.warm-peach,
+body.warm-peach,
+.warm-peach {
+  --bg-gradient: linear-gradient(135deg, #fff7ed 0%, #ffedd5 50%, #fef3c7 100%) !important;
+  --bg-card: rgba(255, 255, 255, 0.94) !important;
+  --pink-50: #fff7ed !important;
+  --pink-100: #ffedd5 !important;
+  --pink-200: #fed7aa !important;
+  --pink-300: #fdba74 !important;
+  --pink-400: #fb923c !important;
+  --pink-500: #f97316 !important;
+  --pink-600: #ea580c !important;
+  --rose-primary: #f97316 !important;
+  --rose-gradient: linear-gradient(135deg, #fb923c 0%, #f97316 50%, #c2410c 100%) !important;
+  --shadow-glass: 0 8px 32px 0 rgba(249, 115, 22, 0.15) !important;
+  --border-subtle: rgba(251, 146, 60, 0.25) !important;
+  background: var(--bg-gradient) !important;
+}
+
+/* Soft Sage Mint Theme */
+html.soft-sage,
+body.soft-sage,
+.soft-sage {
+  --bg-gradient: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 50%, #ecfdf5 100%) !important;
+  --bg-card: rgba(255, 255, 255, 0.94) !important;
+  --pink-50: #f0fdf4 !important;
+  --pink-100: #dcfce7 !important;
+  --pink-200: #bbf7d0 !important;
+  --pink-300: #86efac !important;
+  --pink-400: #4ade80 !important;
+  --pink-500: #22c55e !important;
+  --pink-600: #16a34a !important;
+  --rose-primary: #16a34a !important;
+  --rose-gradient: linear-gradient(135deg, #4ade80 0%, #22c55e 50%, #15803d 100%) !important;
+  --shadow-glass: 0 8px 32px 0 rgba(34, 197, 94, 0.15) !important;
+  --border-subtle: rgba(74, 222, 128, 0.25) !important;
+  background: var(--bg-gradient) !important;
+}
+
+/* 🖤 Onyx Black Theme (True Dark AMOLED) */
+html.onyx-black,
+body.onyx-black,
+.onyx-black {
+  --bg-gradient: linear-gradient(135deg, #09090b 0%, #121215 50%, #18181b 100%) !important;
+  --bg-card: rgba(24, 24, 27, 0.92) !important;
+  --bg-glass: rgba(18, 18, 20, 0.88) !important;
+  --pink-50: #1c1917 !important;
+  --pink-100: #27272a !important;
+  --pink-200: #3f3f46 !important;
+  --pink-300: #71717a !important;
+  --pink-400: #f43f5e !important;
+  --pink-500: #e11d48 !important;
+  --pink-600: #be123c !important;
+  --rose-primary: #f43f5e !important;
+  --rose-gradient: linear-gradient(135deg, #fb7185 0%, #f43f5e 50%, #e11d48 100%) !important;
+  --text-primary: #f8fafc !important;
+  --text-secondary: #cbd5e1 !important;
+  --text-muted: #94a3b8 !important;
+  --navy-dark: #ffffff !important;
+  --border-subtle: rgba(244, 63, 94, 0.32) !important;
+  --border-card: rgba(63, 63, 70, 0.6) !important;
+  --shadow-glass: 0 8px 32px 0 rgba(0, 0, 0, 0.65) !important;
+  background: #09090b !important;
+  color: #f8fafc !important;
+}
+
+html.onyx-black aside,
+body.onyx-black aside,
+html.onyx-black nav,
+body.onyx-black nav {
+  background: rgba(18, 18, 20, 0.95) !important;
+  border-color: rgba(63, 63, 70, 0.6) !important;
+}
+
+html.onyx-black .glass-card,
+body.onyx-black .glass-card {
+  background: rgba(24, 24, 27, 0.92) !important;
+  border-color: rgba(63, 63, 70, 0.6) !important;
+  color: #f8fafc !important;
+}
+
+/* ⚪ Pure White & Crimson Red Theme */
+html.crimson-white,
+body.crimson-white,
+.crimson-white {
+  --bg-gradient: linear-gradient(135deg, #ffffff 0%, #fff5f5 50%, #fee2e2 100%) !important;
+  --bg-card: rgba(255, 255, 255, 0.98) !important;
+  --bg-glass: rgba(255, 255, 255, 0.9) !important;
+  --pink-50: #fff5f5 !important;
+  --pink-100: #fee2e2 !important;
+  --pink-200: #fecaca !important;
+  --pink-300: #f87171 !important;
+  --pink-400: #ef4444 !important;
+  --pink-500: #dc2626 !important;
+  --pink-600: #b91c1c !important;
+  --rose-primary: #b91c1c !important;
+  --rose-gradient: linear-gradient(135deg, #ef4444 0%, #dc2626 50%, #991b1b 100%) !important;
+  --shadow-glass: 0 8px 32px 0 rgba(185, 28, 28, 0.16) !important;
+  --border-subtle: rgba(220, 38, 38, 0.35) !important;
+  --border-card: rgba(254, 202, 202, 0.95) !important;
+  background: var(--bg-gradient) !important;
+}
+
+/* 👑 Royal Emerald & Gold Theme */
+html.emerald-gold,
+body.emerald-gold,
+.emerald-gold {
+  --bg-gradient: linear-gradient(135deg, #f0fdf4 0%, #ecfdf5 50%, #fefce8 100%) !important;
+  --bg-card: rgba(255, 255, 255, 0.96) !important;
+  --pink-50: #f0fdf4 !important;
+  --pink-100: #dcfce7 !important;
+  --pink-200: #bbf7d0 !important;
+  --pink-300: #86efac !important;
+  --pink-400: #10b981 !important;
+  --pink-500: #059669 !important;
+  --pink-600: #047857 !important;
+  --rose-primary: #047857 !important;
+  --rose-gradient: linear-gradient(135deg, #10b981 0%, #059669 50%, #064e3b 100%) !important;
+  --shadow-glass: 0 8px 32px 0 rgba(5, 150, 105, 0.18) !important;
+  --border-subtle: rgba(234, 179, 8, 0.4) !important;
+  --border-card: rgba(187, 247, 208, 0.85) !important;
+  background: var(--bg-gradient) !important;
+}
+
+/* ✨ Sunset Rose Gold Theme */
+html.rose-gold,
+body.rose-gold,
+.rose-gold {
+  --bg-gradient: linear-gradient(135deg, #fff1f2 0%, #fef3c7 50%, #fff7ed 100%) !important;
+  --bg-card: rgba(255, 255, 255, 0.95) !important;
+  --pink-50: #fff1f2 !important;
+  --pink-100: #ffe4e6 !important;
+  --pink-200: #fecdd3 !important;
+  --pink-300: #fda4af !important;
+  --pink-400: #fb7185 !important;
+  --pink-500: #f43f5e !important;
+  --pink-600: #e11d48 !important;
+  --rose-primary: #e11d48 !important;
+  --rose-gradient: linear-gradient(135deg, #fb7185 0%, #f43f5e 50%, #d97706 100%) !important;
+  --shadow-glass: 0 8px 32px 0 rgba(225, 29, 72, 0.18) !important;
+  --border-subtle: rgba(245, 158, 11, 0.35) !important;
+  --border-card: rgba(254, 205, 211, 0.85) !important;
+  background: var(--bg-gradient) !important;
+}
+
+/* ============================================================ */
+/* ACCESSIBILITY & FONT SIZES */
+/* ============================================================ */
+
+/* Small Font (14px) */
+html.font-size-small,
+body.font-size-small {
+  font-size: 14px !important;
+}
+
+/* Default Font (16px) */
+html.font-size-default,
+body.font-size-default {
+  font-size: 16px !important;
+}
+
+/* Large Font (19px) - Accessible & Easy Reading */
+html.font-size-large,
+body.font-size-large,
+.accessibility-large-text {
+  font-size: 19px !important;
+}
+
+html.font-size-large h1, body.font-size-large h1 { font-size: 2.35rem !important; }
+html.font-size-large h2, body.font-size-large h2 { font-size: 1.85rem !important; }
+html.font-size-large h3, body.font-size-large h3 { font-size: 1.45rem !important; }
+html.font-size-large p, body.font-size-large p { font-size: 1.05rem !important; line-height: 1.6 !important; }
+html.font-size-large span, body.font-size-large span { font-size: 1rem !important; }
+html.font-size-large button, body.font-size-large button { font-size: 1.05rem !important; }
+
+.accessibility-high-contrast {
+  --text-primary: #000000 !important;
+  --text-secondary: #0f172a !important;
+  --border-card: #94a3b8 !important;
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+::-webkit-scrollbar-track {
+  background: #fdf2f8;
+}
+::-webkit-scrollbar-thumb {
+  background: var(--pink-300);
+  border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--pink-400);
+}
+
+@keyframes slideInRight {
+  from {
+    opacity: 0;
+    transform: translateX(50px) scale(0.96);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0) scale(1);
+  }
+}
+
+@keyframes pulse {
+  0%, 100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.08);
+  }
+}
+
+/* Organized Category Sidebar Styling */
+.femtech-sidebar::-webkit-scrollbar {
+  width: 5px;
+}
+.femtech-sidebar::-webkit-scrollbar-track {
+  background: transparent;
+}
+.femtech-sidebar::-webkit-scrollbar-thumb {
+  background: #fecdd3;
+  border-radius: 4px;
+}
+.femtech-sidebar::-webkit-scrollbar-thumb:hover {
+  background: #fda4af;
+}
+
+.sidebar-nav-btn:hover {
+  background: rgba(244, 63, 94, 0.06) !important;
+  color: #0f172a !important;
+}
+
+.sidebar-nav-btn.active:hover {
+  background: #fee2e8 !important;
+  color: #9f1239 !important;
+}
+
+/* ============================================================ */
+/* BEAUTIFUL INTERACTIVE ANIMATIONS & VISUAL EFFECTS */
+/* ============================================================ */
+
+@keyframes floatGentle {
+  0%, 100% {
+    transform: translateY(0px) rotate(0deg);
+  }
+  50% {
+    transform: translateY(-8px) rotate(1deg);
+  }
+}
+
+@keyframes pulseGlow {
+  0%, 100% {
+    box-shadow: 0 0 14px rgba(225, 29, 72, 0.25);
+    transform: scale(1);
+  }
+  50% {
+    box-shadow: 0 0 28px rgba(225, 29, 72, 0.55);
+    transform: scale(1.025);
+  }
+}
+
+@keyframes breatheSoft {
+  0%, 100% {
+    transform: scale(1);
+    filter: drop-shadow(0 4px 12px rgba(225, 29, 72, 0.2));
+  }
+  50% {
+    transform: scale(1.06);
+    filter: drop-shadow(0 8px 24px rgba(225, 29, 72, 0.45));
+  }
+}
+
+@keyframes butterflyFlap {
+  0%, 100% {
+    transform: scaleX(1) translateY(0);
+  }
+  25% {
+    transform: scaleX(0.7) translateY(-3px) rotate(-1deg);
+  }
+  50% {
+    transform: scaleX(0.85) translateY(-5px);
+  }
+  75% {
+    transform: scaleX(0.7) translateY(-2px) rotate(1deg);
+  }
+}
+
+@keyframes cardEntranceFade {
+  from {
+    opacity: 0;
+    transform: translateY(16px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes heartBeatGlow {
+  0%, 100% {
+    transform: scale(1);
+  }
+  14% {
+    transform: scale(1.12);
+  }
+  28% {
+    transform: scale(1);
+  }
+  42% {
+    transform: scale(1.12);
+  }
+  70% {
+    transform: scale(1);
+  }
+}
+
+.animate-float {
+  animation: floatGentle 4s ease-in-out infinite;
+}
+
+.animate-breathe {
+  animation: breatheSoft 3.5s ease-in-out infinite;
+}
+
+.animate-glow {
+  animation: pulseGlow 2.5s ease-in-out infinite;
+}
+
+.animate-card {
+  animation: cardEntranceFade 0.45s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.animate-butterfly {
+  display: inline-block;
+  animation: butterflyFlap 1.8s ease-in-out infinite, floatGentle 3.5s ease-in-out infinite;
+}
+
+.animate-heartbeat {
+  animation: heartBeatGlow 2.2s ease-in-out infinite;
+}
+
+.hover-lift {
+  transition: transform 0.28s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.28s ease !important;
+}
+.hover-lift:hover {
+  transform: translateY(-4px) scale(1.01) !important;
+  box-shadow: 0 14px 32px rgba(225, 29, 72, 0.16) !important;
+}
+
+.femtech-dynamic-logo {
+  animation: breatheSoft 4s ease-in-out infinite;
+}
+
+.badge {
+  transition: transform 0.2s ease;
+}
+.badge:hover {
+  transform: scale(1.05);
+}
+
+@keyframes partyPopperPop {
+  0% {
+    transform: scale(0.3) translateY(40px);
+    opacity: 0;
+  }
+  50% {
+    transform: scale(1.08) translateY(-6px);
+    opacity: 1;
+  }
+  75% {
+    transform: scale(0.98) translateY(0);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(1) translateY(0);
+    opacity: 1;
+  }
+}
+
+@keyframes confettiBurst {
+  0% {
+    transform: translate(0, 0) rotate(0deg) scale(0.2);
+    opacity: 1;
+  }
+  60% {
+    transform: translate(var(--tx), var(--ty)) rotate(var(--rot)) scale(1.1);
+    opacity: 1;
+  }
+  100% {
+    transform: translate(calc(var(--tx) * 1.15), calc(var(--ty) + 130px)) rotate(calc(var(--rot) * 1.4)) scale(0.6);
+    opacity: 0;
+  }
+}
+
+/* ============================================================ */
+/* ADVANCED ANIMATION SUITE (Page Transitions, Vitals, Shimmer) */
+/* ============================================================ */
+
+/* 1. Page Entrance Transition */
+@keyframes pageGlideFade {
+  0% {
+    opacity: 0;
+    transform: translateY(16px) scale(0.99);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.page-transition-entrance {
+  animation: pageGlideFade 0.38s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+/* 2. ECG Realistic Heartbeat Pulse */
+@keyframes ecgBeatPulse {
+  0% {
+    transform: scale(1);
+    filter: drop-shadow(0 0 0 rgba(225, 29, 72, 0));
+  }
+  12% {
+    transform: scale(1.18);
+    filter: drop-shadow(0 0 10px rgba(225, 29, 72, 0.6));
+  }
+  24% {
+    transform: scale(1);
+    filter: drop-shadow(0 0 0 rgba(225, 29, 72, 0));
+  }
+  36% {
+    transform: scale(1.14);
+    filter: drop-shadow(0 0 8px rgba(225, 29, 72, 0.5));
+  }
+  48% {
+    transform: scale(1);
+    filter: drop-shadow(0 0 0 rgba(225, 29, 72, 0));
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+.animate-ecg-pulse {
+  animation: ecgBeatPulse 1.6s ease-in-out infinite;
+}
+
+/* 3. Concentric Radar / IoT Ping */
+@keyframes radarPingWave {
+  0% {
+    transform: scale(0.95);
+    box-shadow: 0 0 0 0 rgba(14, 165, 233, 0.7);
+  }
+  70% {
+    transform: scale(1);
+    box-shadow: 0 0 0 16px rgba(14, 165, 233, 0);
+  }
+  100% {
+    transform: scale(0.95);
+    box-shadow: 0 0 0 0 rgba(14, 165, 233, 0);
+  }
+}
+
+.animate-radar-ping {
+  animation: radarPingWave 2s cubic-bezier(0.24, 0, 0.38, 1) infinite;
+}
+
+/* 4. Shimmer Glint Sweep */
+@keyframes shimmerGlint {
+  0% {
+    background-position: -250% 0;
+  }
+  100% {
+    background-position: 250% 0;
+  }
+}
+
+.animate-shimmer {
+  background: linear-gradient(90deg, rgba(255, 255, 255, 0) 0%, rgba(255, 255, 255, 0.55) 50%, rgba(255, 255, 255, 0) 100%);
+  background-size: 200% 100%;
+  animation: shimmerGlint 2.8s infinite;
+}
+
+/* 5. Liquid Wave Hydration */
+@keyframes liquidWaveFlow {
+  0%, 100% {
+    transform: translateY(0) rotate(0deg);
+  }
+  25% {
+    transform: translateY(-4px) rotate(2deg);
+  }
+  50% {
+    transform: translateY(0) rotate(0deg);
+  }
+  75% {
+    transform: translateY(3px) rotate(-2deg);
+  }
+}
+
+.animate-liquid-wave {
+  animation: liquidWaveFlow 3s ease-in-out infinite;
+}
+
+/* 6. Organic Flame Flicker (Menopause / Thermal) */
+@keyframes flameFlickerGlow {
+  0%, 100% {
+    transform: scale(1) rotate(0deg);
+    filter: drop-shadow(0 0 8px rgba(249, 115, 22, 0.4));
+  }
+  25% {
+    transform: scale(1.08, 0.96) rotate(-2deg);
+    filter: drop-shadow(0 0 14px rgba(249, 115, 22, 0.7));
+  }
+  50% {
+    transform: scale(0.96, 1.06) rotate(1deg);
+    filter: drop-shadow(0 0 10px rgba(234, 88, 12, 0.5));
+  }
+  75% {
+    transform: scale(1.04, 1.02) rotate(-1deg);
+    filter: drop-shadow(0 0 16px rgba(249, 115, 22, 0.8));
+  }
+}
+
+.animate-flame-flicker {
+  animation: flameFlickerGlow 2s ease-in-out infinite;
+}
+
+/* 7. Twinkling Sparkle Spin */
+@keyframes sparkleTwinkleSpin {
+  0% {
+    transform: rotate(0deg) scale(0.9);
+    opacity: 0.8;
+  }
+  50% {
+    transform: rotate(180deg) scale(1.15);
+    opacity: 1;
+  }
+  100% {
+    transform: rotate(360deg) scale(0.9);
+    opacity: 0.8;
+  }
+}
+
+.animate-sparkle-spin {
+  display: inline-block;
+  animation: sparkleTwinkleSpin 4s linear infinite;
+}
+
+/* 8. Notification Bell Swing */
+@keyframes bellSwingRing {
+  0%, 100% {
+    transform: rotate(0);
+  }
+  10%, 30%, 50% {
+    transform: rotate(16deg);
+  }
+  20%, 40% {
+    transform: rotate(-16deg);
+  }
+  60% {
+    transform: rotate(8deg);
+  }
+  70% {
+    transform: rotate(-8deg);
+  }
+  80% {
+    transform: rotate(0);
+  }
+}
+
+.animate-bell-ring {
+  transform-origin: top center;
+  animation: bellSwingRing 2.5s ease-in-out infinite;
+}
+
+/* 9. Diaphragmatic Breath Circle Pacer */
+@keyframes breathePacerCycle {
+  0%, 100% {
+    /* Exhale state */
+    transform: scale(0.85);
+    background: radial-gradient(circle, #fce7f3 0%, #ede9fe 100%);
+    box-shadow: 0 0 15px rgba(244, 63, 94, 0.2);
+  }
+  25% {
+    /* Inhale state (expand) */
+    transform: scale(1.22);
+    background: radial-gradient(circle, #ffe4e6 0%, #fbcfe8 100%);
+    box-shadow: 0 0 40px rgba(244, 63, 94, 0.5);
+  }
+  50% {
+    /* Hold state */
+    transform: scale(1.22);
+    background: radial-gradient(circle, #ede9fe 0%, #ddd6fe 100%);
+    box-shadow: 0 0 35px rgba(147, 51, 234, 0.4);
+  }
+}
+
+.animate-breathe-pacer {
+  animation: breathePacerCycle 19s ease-in-out infinite;
+}
+
+/* 10. Card Interactive Tilt & Glow Lift */
+.card-interactive {
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1) !important;
+}
+.card-interactive:hover {
+  transform: translateY(-5px) scale(1.01) !important;
+  box-shadow: 0 16px 36px rgba(225, 29, 72, 0.14) !important;
+  border-color: rgba(244, 63, 94, 0.45) !important;
+}
+
+/* 11. Tactile Button Click Feedback */
+button:active, .btn-primary:active, .btn-secondary:active {
+  transform: scale(0.96) !important;
+  transition: transform 0.1s ease !important;
+}
+
+/* 12. Animated Gradient Flow */
+@keyframes gradientShift {
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
+}
+
+.animate-gradient-flow {
+  background-size: 200% 200% !important;
+  animation: gradientShift 4s ease infinite !important;
+}

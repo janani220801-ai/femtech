@@ -1,0 +1,28 @@
+{
+  "name": "femtech-platform",
+  "version": "1.0.0",
+  "description": "FemTech - AI-IoT Women's Health & Wellness Platform",
+  "scripts": {
+    "install-all": "npm install && cd backend && npm install && cd ../frontend && npm install",
+    "server": "cd backend && npm run dev",
+    "client": "cd frontend && npm run dev",
+    "dev": "concurrently \"npm run server\" \"npm run client\"",
+    "build": "cd frontend && npm run build",
+    "start": "cd backend && npm start"
+  },
+  "keywords": [
+    "femtech",
+    "womens-health",
+    "ai",
+    "iot",
+    "wellness",
+    "cycle-tracker",
+    "menstruation",
+    "health-vault"
+  ],
+  "author": "FemTech Team",
+  "license": "MIT",
+  "devDependencies": {
+    "concurrently": "^8.2.2"
+  }
+}
