@@ -45,16 +45,28 @@ export const ViewModeProvider = ({ children }) => {
         return { success: true };
       }
     } catch (err) {
-      // Fallback verification for demo zero-setup
+      // Direct / offline verification strictly locked to Janani
       const cleanEmail = (email || '').trim().toLowerCase();
       const cleanPass = (password || '').trim();
-      if ((cleanEmail === 'admin@femtech.org' || cleanEmail === 'admin') && cleanPass === 'admin123') {
+      const isIdValid =
+        cleanEmail === 'janani22_janani220801' ||
+        cleanEmail === 'janani220801@gmail.com' ||
+        cleanEmail === 'admin@123' ||
+        cleanEmail === 'janani22';
+
+      const isPassValid =
+        cleanPass === 'janani2222 jwa2217' ||
+        cleanPass === 'jwa2217' ||
+        cleanPass === 'janani2222jwa2217' ||
+        cleanPass === 'jwa2210';
+
+      if (isIdValid && isPassValid) {
         setIsAdminAuthenticated(true);
         setViewMode('admin');
         setShowAdminAuthModal(false);
         return { success: true };
       }
-      setAdminAuthError(err.message || 'Invalid administrator credentials. Please check ID and password.');
+      setAdminAuthError(err.message || 'தவறான அட்மின் ஐடி அல்லது கடவுச்சொல். அட்மினிஸ்ட்ரேட்டர் Janani மட்டுமே உள்நுழைய முடியும். (Access strictly restricted to Janani).');
       return { success: false, message: err.message };
     }
   };

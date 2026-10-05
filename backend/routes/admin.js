@@ -5,11 +5,12 @@ const DailyLog = require('../models/DailyLog');
 const CycleRecord = require('../models/CycleRecord');
 const MedicalDocument = require('../models/MedicalDocument');
 
-// Admin default credentials
+// Admin default credentials - strictly reserved for Janani
 const ADMIN_CREDENTIALS = {
-  email: 'admin@femtech.org',
-  password: 'admin123',
-  name: 'FemTech Chief Administrator',
+  email: 'janani22_janani220801',
+  alternateEmail: 'janani220801@gmail.com',
+  password: 'janani2222 jwa2217',
+  name: 'Janani S (FemTech Chief Administrator)',
   role: 'SUPER_ADMIN'
 };
 
@@ -103,14 +104,23 @@ router.post('/login', async (req, res) => {
     const cleanEmail = email.trim().toLowerCase();
     const cleanPass = password.trim();
 
-    // Verify credentials
-    const isEmailValid = cleanEmail === ADMIN_CREDENTIALS.email || cleanEmail === 'admin';
-    const isPassValid = cleanPass === ADMIN_CREDENTIALS.password;
+    // Verify credentials strictly
+    const isEmailValid =
+      cleanEmail === 'janani22_janani220801' ||
+      cleanEmail === 'janani220801@gmail.com' ||
+      cleanEmail === 'admin@123' ||
+      cleanEmail === 'janani22';
+
+    const isPassValid =
+      cleanPass === 'janani2222 jwa2217' ||
+      cleanPass === 'jwa2217' ||
+      cleanPass === 'janani2222jwa2217' ||
+      cleanPass === 'jwa2210';
 
     if (!isEmailValid || !isPassValid) {
       return res.status(401).json({
         success: false,
-        message: 'Invalid administrator credentials. Please check your admin ID and password.'
+        message: 'Invalid administrator credentials. Access strictly restricted to Janani.'
       });
     }
 

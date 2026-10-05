@@ -56,7 +56,26 @@ export default function BrandWingsLogo({ size = 42, style = {}, className = '', 
         activeVariant = 'wings'; // Radiant freedom wings in dark AMOLED
         break;
       case 'crimson-white':
+      case 'whitish-red':
         activeVariant = 'curl_knees'; // Crimson comfort embrace
+        break;
+      case 'burgundy-wine':
+        activeVariant = 'curl_knees'; // Deep velvet embrace
+        break;
+      case 'sunshine-yellow':
+        activeVariant = 'lotus'; // Radiant vitality lotus
+        break;
+      case 'grey-pink':
+        activeVariant = 'wings'; // Elegant freedom wings
+        break;
+      case 'plain-grey':
+        activeVariant = 'heart'; // Minimalist pulse
+        break;
+      case 'grey-red':
+        activeVariant = 'wings'; // High contrast courage wings
+        break;
+      case 'custom-palette':
+        activeVariant = 'curl_knees';
         break;
       case 'emerald-gold':
         activeVariant = 'lotus'; // Royal herbal lotus
@@ -78,6 +97,21 @@ export default function BrandWingsLogo({ size = 42, style = {}, className = '', 
         return 'linear-gradient(135deg, #e11d48 0%, #be123c 50%, #881337 100%)';
       case 'ruby-crimson':
         return 'linear-gradient(135deg, #be123c 0%, #990024 50%, #580015 100%)';
+      case 'whitish-red':
+      case 'crimson-white':
+        return 'linear-gradient(135deg, #ef4444 0%, #dc2626 50%, #991b1b 100%)';
+      case 'burgundy-wine':
+        return 'linear-gradient(135deg, #9f1239 0%, #700b2b 50%, #4c0519 100%)';
+      case 'sunshine-yellow':
+        return 'linear-gradient(135deg, #facc15 0%, #eab308 50%, #b45309 100%)';
+      case 'grey-pink':
+        return 'linear-gradient(135deg, #64748b 0%, #ec4899 50%, #be185d 100%)';
+      case 'plain-grey':
+        return 'linear-gradient(135deg, #64748b 0%, #475569 50%, #1e293b 100%)';
+      case 'grey-red':
+        return 'linear-gradient(135deg, #475569 0%, #dc2626 50%, #991b1b 100%)';
+      case 'custom-palette':
+        return 'var(--rose-gradient)';
       case 'sapphire-blue':
         return 'linear-gradient(135deg, #2563eb 0%, #1d4ed8 50%, #0369a1 100%)';
       case 'soft-pink':
@@ -92,8 +126,6 @@ export default function BrandWingsLogo({ size = 42, style = {}, className = '', 
         return 'linear-gradient(135deg, #a855f7 0%, #7e22ce 50%, #3b0764 100%)';
       case 'onyx-black':
         return 'linear-gradient(135deg, #27272a 0%, #18181b 50%, #09090b 100%)';
-      case 'crimson-white':
-        return 'linear-gradient(135deg, #ef4444 0%, #dc2626 50%, #991b1b 100%)';
       case 'emerald-gold':
         return 'linear-gradient(135deg, #10b981 0%, #059669 50%, #064e3b 100%)';
       case 'rose-gold':

@@ -261,6 +261,25 @@ export default function AuthModal({ isOpen, onClose }) {
           localStorage.setItem('femtech_user_dob', newUserPayload.dateOfBirth);
         }
 
+        // Save to registered users list for Administrator oversight
+        try {
+          const allReg = JSON.parse(localStorage.getItem('femtech_all_registered_users') || '[]');
+          const existingIdx = allReg.findIndex(u => u.email?.toLowerCase() === newUserPayload.email.toLowerCase());
+          const userRecord = {
+            ...newUserPayload,
+            _id: 'user_' + Date.now(),
+            registeredAt: new Date().toISOString(),
+            status: 'ACTIVE (Online)',
+            device: navigator.userAgent.includes('Mobile') ? 'Mobile Smartphone' : 'Desktop Browser'
+          };
+          if (existingIdx >= 0) {
+            allReg[existingIdx] = userRecord;
+          } else {
+            allReg.unshift(userRecord);
+          }
+          localStorage.setItem('femtech_all_registered_users', JSON.stringify(allReg));
+        } catch (e) {}
+
         // Clear justLoggedOut flag upon success
         sessionStorage.removeItem('femtech_just_logged_out');
         setJustLoggedOut(false);

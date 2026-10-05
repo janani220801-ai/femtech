@@ -173,6 +173,50 @@ export default function AdminPortal() {
         }
       });
 
+      if (combinedUsers.length === 0) {
+        combinedUsers = [
+          {
+            _id: 'u_janani_1',
+            name: 'Janani S',
+            email: 'janani220801@gmail.com',
+            age: 24,
+            dateOfBirth: '2001-05-14',
+            bloodGroup: 'B+',
+            phone: '+91 93804 57517',
+            status: 'ACTIVE (Online)',
+            device: 'Windows Chrome (Current Session)',
+            emergencyContact: { name: 'Kavitha (Mother)', phone: '+91 72008 53683', relation: 'Mother' },
+            lastLogin: new Date().toISOString()
+          },
+          {
+            _id: 'u_priya_2',
+            name: 'Dr. Priya Raman',
+            email: 'priya@femtech.health',
+            age: 29,
+            dateOfBirth: '1996-11-20',
+            bloodGroup: 'O+',
+            phone: '+91 98401 22345',
+            status: 'ACTIVE (Registered)',
+            device: 'Android Mobile App',
+            emergencyContact: { name: 'Ramanathan', phone: '+91 98401 11223', relation: 'Father' },
+            lastLogin: new Date(Date.now() - 35 * 60 * 1000).toISOString()
+          },
+          {
+            _id: 'u_deepa_3',
+            name: 'Deepa Sundaram',
+            email: 'deepa@femtech.health',
+            age: 22,
+            dateOfBirth: '2003-08-12',
+            bloodGroup: 'A+',
+            phone: '+91 98410 77890',
+            status: 'ACTIVE (Registered)',
+            device: 'iOS Safari',
+            emergencyContact: { name: 'Sundaram (Father)', phone: '+91 98410 99999', relation: 'Father' },
+            lastLogin: new Date(Date.now() - 75 * 60 * 1000).toISOString()
+          }
+        ];
+      }
+
       setUsers(combinedUsers);
 
       if (aRes.status === 'fulfilled' && aRes.value.success) {
@@ -277,7 +321,7 @@ export default function AdminPortal() {
                   border: '1px solid rgba(244, 63, 94, 0.4)'
                 }}
               >
-                SUPER_ADMIN: admin@femtech.org
+                SUPER_ADMIN: Janani (janani22_janani220801)
               </span>
             </div>
             <p style={{ margin: '6px 0 0 0', fontSize: '0.92rem', color: '#a1a1aa' }}>

@@ -41,6 +41,34 @@ export const ThemeProvider = ({ children }) => {
     return saved;
   });
 
+  // Custom palette state for "Pay ₹99 & Customize Your Own Color"
+  const [customColors, setCustomColors] = useState(() => {
+    try {
+      const saved = localStorage.getItem('femtech_custom_colors');
+      return saved ? JSON.parse(saved) : {
+        primary: '#be123c',
+        gradientStart: '#fb7185',
+        gradientEnd: '#881337',
+        bg: '#fff5f7',
+        card: '#ffffff'
+      };
+    } catch (e) {
+      return {
+        primary: '#be123c',
+        gradientStart: '#fb7185',
+        gradientEnd: '#881337',
+        bg: '#fff5f7',
+        card: '#ffffff'
+      };
+    }
+  });
+
+  const saveCustomTheme = (newColors) => {
+    setCustomColors(newColors);
+    localStorage.setItem('femtech_custom_colors', JSON.stringify(newColors));
+    setTheme('custom-palette');
+  };
+
   useEffect(() => {
     localStorage.setItem('femtech_logo_style', logoStyle);
   }, [logoStyle]);
@@ -59,6 +87,29 @@ export const ThemeProvider = ({ children }) => {
       setTheme(user.theme);
     }
   }, [user]);
+
+  useEffect(() => {
+    const root = document.documentElement;
+    if (theme === 'custom-palette' && customColors) {
+      root.style.setProperty('--rose-primary', customColors.primary);
+      root.style.setProperty('--pink-500', customColors.primary);
+      root.style.setProperty('--pink-600', customColors.primary);
+      root.style.setProperty('--rose-gradient', `linear-gradient(135deg, ${customColors.gradientStart || customColors.primary} 0%, ${customColors.primary} 50%, ${customColors.gradientEnd || customColors.primary} 100%)`);
+      root.style.setProperty('--bg-gradient', `linear-gradient(135deg, ${customColors.bg || '#fff5f7'} 0%, #ffffff 100%)`);
+      root.style.setProperty('--bg-card', customColors.card || 'rgba(255, 255, 255, 0.96)');
+      root.style.setProperty('--border-subtle', `${customColors.primary}40`);
+      root.style.setProperty('--shadow-glass', `0 8px 32px 0 ${customColors.primary}33`);
+    } else {
+      root.style.removeProperty('--rose-primary');
+      root.style.removeProperty('--pink-500');
+      root.style.removeProperty('--pink-600');
+      root.style.removeProperty('--rose-gradient');
+      root.style.removeProperty('--bg-gradient');
+      root.style.removeProperty('--bg-card');
+      root.style.removeProperty('--border-subtle');
+      root.style.removeProperty('--shadow-glass');
+    }
+  }, [theme, customColors]);
 
   useEffect(() => {
     const classList = [
@@ -89,6 +140,8 @@ export const ThemeProvider = ({ children }) => {
       value={{
         theme,
         setTheme,
+        customColors,
+        saveCustomTheme,
         fontSize,
         setFontSize,
         largeText: fontSize === 'large',

@@ -322,17 +322,21 @@ const CYCLE_MODES_I18N = {
   }
 };
 
-export default function CycleTracker() {
+export default function CycleTracker({ initialMode = 'regular' }) {
   const { t, language } = useLanguage();
   const cDict = CYCLE_I18N[language] || CYCLE_I18N.en;
   const modesDict = CYCLE_MODES_I18N[language] || CYCLE_MODES_I18N.en;
-  const [cycleMode, setCycleMode] = useState('regular'); // 'regular' | 'firstPeriod' | 'menopause'
+  const [cycleMode, setCycleMode] = useState(initialMode);
   const [history, setHistory] = useState([]);
   const [latest, setLatest] = useState(null);
   const [currentCycleDay, setCurrentCycleDay] = useState(14);
   const [daysUntilNext, setDaysUntilNext] = useState(14);
   const [loading, setLoading] = useState(true);
   const [showLogModal, setShowLogModal] = useState(false);
+
+  useEffect(() => {
+    if (initialMode) setCycleMode(initialMode);
+  }, [initialMode]);
 
   // Calendar State initialized to current date
   const [calendarDate, setCalendarDate] = useState(() => new Date());
@@ -351,6 +355,27 @@ export default function CycleTracker() {
     energy: 'normal',
     notes: 'Feeling energetic on day 4'
   });
+
+  // Flow level auto-arranges duration: Light (~3d), Medium (5-6d), Heavy (7+d)
+  const handleFlowSelect = (flowId) => {
+    let days = 5;
+    if (flowId === 'light' || flowId === 'spotting') days = 3;
+    if (flowId === 'medium') days = 5;
+    if (flowId === 'heavy') days = 7;
+
+    setFormData(prev => {
+      const start = new Date(prev.startDate || '2026-09-10');
+      const end = new Date(start);
+      end.setDate(start.getDate() + days - 1);
+      const endStr = end.toISOString().split('T')[0];
+      return {
+        ...prev,
+        flowLevel: flowId,
+        periodDuration: days,
+        endDate: endStr
+      };
+    });
+  };
 
   const availableSymptoms = [
     'Cramps', 'Bloating', 'Headache', 'Backache', 'Acne', 'Fatigue', 'Breast Tenderness', 'Cravings'
@@ -553,11 +578,59 @@ export default function CycleTracker() {
         </button>
       </div>
 
-      {/* VIEW 1: FIRST PERIOD TRACKER */}
-      {cycleMode === 'firstPeriod' && <FirstPeriodTracker />}
+      {/* VIEW 1: FIRST PERIOD TRACKER (MENARCHE) */}
+      {cycleMode === 'firstPeriod' && (
+        <div>
+          <button
+            type="button"
+            onClick={() => setCycleMode('regular')}
+            style={{
+              marginBottom: '16px',
+              padding: '8px 18px',
+              borderRadius: '12px',
+              border: '1.5px solid #ec4899',
+              background: '#fdf2f8',
+              color: '#be185d',
+              fontWeight: 800,
+              fontSize: '0.85rem',
+              cursor: 'pointer',
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: '6px'
+            }}
+          >
+            ← {language === 'ta' ? 'வழக்கமான சுழற்சி டிராக்கருக்குத் திரும்பு' : 'Back to Regular Cycle Tracker'}
+          </button>
+          <FirstPeriodTracker />
+        </div>
+      )}
 
       {/* VIEW 2: MENOPAUSE TRACKER */}
-      {cycleMode === 'menopause' && <MenopauseTracker />}
+      {cycleMode === 'menopause' && (
+        <div>
+          <button
+            type="button"
+            onClick={() => setCycleMode('regular')}
+            style={{
+              marginBottom: '16px',
+              padding: '8px 18px',
+              borderRadius: '12px',
+              border: '1.5px solid #ea580c',
+              background: '#fff7ed',
+              color: '#c2410c',
+              fontWeight: 800,
+              fontSize: '0.85rem',
+              cursor: 'pointer',
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: '6px'
+            }}
+          >
+            ← {language === 'ta' ? 'வழக்கமான சுழற்சி டிராக்கருக்குத் திரும்பு' : 'Back to Regular Cycle Tracker'}
+          </button>
+          <MenopauseTracker />
+        </div>
+      )}
 
       {/* VIEW 3: REGULAR MENSTRUAL CYCLE TRACKER */}
       {cycleMode === 'regular' && (
@@ -657,47 +730,62 @@ export default function CycleTracker() {
           </div>
         </div>
 
-        {/* Card 4: Flow Indicator (Heavy / Moderate / Normal-Light / Spotting) */}
+        {/* Card 4: Flow Indicator (Heavy / Moderate / Normal-Light) */}
         <div className="glass-card card-interactive" style={{ padding: '20px', textAlign: 'center', borderRadius: '18px', border: '1.5px solid #fecdd3' }}>
           <div style={{ fontSize: '0.78rem', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: 700 }}>
-            {language === 'ta' ? 'இரத்தப்போக்கு அளவு (Flow Indicator)' : 'Current Flow Indicator'}
+            {language === 'ta' ? 'இரத்தப்போக்கு & சுழற்சி காலம்' : 'Current Flow & Period Duration'}
           </div>
-          <div style={{ fontSize: '1.45rem', fontWeight: 800, color: currentFlow === 'heavy' ? '#dc2626' : currentFlow === 'medium' ? '#ea580c' : '#db2777', margin: '4px 0', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px' }}>
-            <span>{currentFlow === 'heavy' ? '💧💧💧' : currentFlow === 'medium' ? '💧💧' : currentFlow === 'light' ? '💧' : '🌸'}</span>
+          <div style={{ fontSize: '1.35rem', fontWeight: 800, color: currentFlow === 'heavy' ? '#dc2626' : currentFlow === 'medium' ? '#ea580c' : '#db2777', margin: '4px 0', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px' }}>
+            <span>{currentFlow === 'heavy' ? '💧💧💧' : currentFlow === 'medium' ? '💧💧' : '💧'}</span>
             <span>
               {currentFlow === 'heavy'
-                ? (language === 'ta' ? 'அதிகம் (Heavy)' : 'Heavy Flow')
+                ? (language === 'ta' ? 'அதிகம் (7+ நாட்கள்)' : 'Heavy (7+ Days)')
                 : currentFlow === 'medium'
-                ? (language === 'ta' ? 'நடுத்தரம் (Moderate)' : 'Moderate Flow')
-                : currentFlow === 'light'
-                ? (language === 'ta' ? 'சீரான / குறைவு (Normal)' : 'Normal / Light')
-                : (language === 'ta' ? 'புள்ளிகள் (Spotting)' : 'Spotting')}
+                ? (language === 'ta' ? 'சீரானது (5–6 நாட்கள்)' : 'Normal (5–6 Days)')
+                : (language === 'ta' ? 'குறைவு (3 நாட்கள்)' : 'Light (~3 Days)')}
             </span>
           </div>
-          <div style={{ display: 'flex', justifyContent: 'center', gap: '4px', marginTop: '6px', flexWrap: 'wrap' }}>
+
+          {/* Quick Flow Selection Buttons */}
+          <div style={{ display: 'flex', justifyContent: 'center', gap: '6px', marginTop: '8px', flexWrap: 'wrap' }}>
             {[
-              { id: 'heavy', label: language === 'ta' ? 'அதிகம்' : 'Heavy', color: '#fee2e2', text: '#dc2626' },
-              { id: 'medium', label: language === 'ta' ? 'நடுத்தரம்' : 'Moderate', color: '#ffedd5', text: '#ea580c' },
-              { id: 'light', label: language === 'ta' ? 'சீரானது' : 'Normal', color: '#fce7f3', text: '#be185d' }
+              { id: 'light', label: language === 'ta' ? 'குறைவு (~3 d)' : 'Light (~3 d)', color: '#fce7f3', text: '#be185d' },
+              { id: 'medium', label: language === 'ta' ? 'சீரானது (5–6 d)' : 'Normal (5–6 d)', color: '#ffedd5', text: '#ea580c' },
+              { id: 'heavy', label: language === 'ta' ? 'அதிகம் (7+ d)' : 'Heavy (7+ d)', color: '#fee2e2', text: '#dc2626' }
             ].map(f => (
               <button
                 key={f.id}
                 type="button"
-                onClick={() => setFormData(prev => ({ ...prev, flowLevel: f.id }))}
+                onClick={() => handleFlowSelect(f.id)}
                 style={{
                   background: currentFlow === f.id ? f.text : f.color,
                   color: currentFlow === f.id ? '#ffffff' : f.text,
                   border: 'none',
                   borderRadius: '12px',
-                  padding: '3px 8px',
-                  fontSize: '0.72rem',
-                  fontWeight: 700,
-                  cursor: 'pointer'
+                  padding: '4px 10px',
+                  fontSize: '0.74rem',
+                  fontWeight: 800,
+                  cursor: 'pointer',
+                  transition: 'all 0.15s ease',
+                  boxShadow: currentFlow === f.id ? '0 2px 6px rgba(0,0,0,0.15)' : 'none'
                 }}
               >
                 {f.label}
               </button>
             ))}
+          </div>
+
+          {/* Arranged Dates Display */}
+          <div style={{
+            marginTop: '10px',
+            padding: '4px 8px',
+            borderRadius: '8px',
+            background: 'rgba(254, 226, 226, 0.5)',
+            fontSize: '0.74rem',
+            color: '#9f1239',
+            fontWeight: 700
+          }}>
+            🗓️ {formData.startDate} → {formData.endDate} ({formData.periodDuration} {language === 'ta' ? 'நாட்கள்' : 'days'})
           </div>
         </div>
       </div>
@@ -989,6 +1077,270 @@ export default function CycleTracker() {
               })}
             </div>
           </div>
+        </div>
+      </div>
+
+      {/* 3. PERIOD CYCLE DATES & FLOW TABLE (பீரியட் டேபிள்) */}
+      <div className="glass-card" style={{
+        padding: '24px',
+        borderRadius: '20px',
+        background: 'white',
+        border: '1.5px solid #fecdd3',
+        marginBottom: '26px',
+        boxShadow: '0 4px 18px rgba(244, 63, 94, 0.06)'
+      }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '16px', flexWrap: 'wrap', gap: '10px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+            <span style={{ fontSize: '1.4rem' }}>🩸</span>
+            <div>
+              <h2 style={{ fontSize: '1.15rem', fontWeight: 800, color: '#881337', margin: 0 }}>
+                {language === 'ta' ? 'மாதவிடாய் சுழற்சி அட்டவணை (Period Cycle Dates Table)' : 'Period Cycle Dates & History Table'}
+              </h2>
+              <p style={{ fontSize: '0.8rem', color: '#64748b', margin: '2px 0 0 0' }}>
+                {language === 'ta'
+                  ? 'என்னென்ன தேதியிலிருந்து எந்தெந்த தேதி வரை மாதவிடாய் இருந்தது என்பதைப் பதிவு செய்து கண்காணிக்கும் அட்டவணை.'
+                  : 'Track past, current, and upcoming period start dates, end dates, and flow patterns.'}
+              </p>
+            </div>
+          </div>
+
+          <button
+            type="button"
+            onClick={() => setShowLogModal(true)}
+            className="btn-primary"
+            style={{ padding: '8px 18px', fontSize: '0.84rem', fontWeight: 800, display: 'inline-flex', alignItems: 'center', gap: '6px' }}
+          >
+            <Plus size={15} />
+            <span>{language === 'ta' ? 'புதிய தேதி பதிவு செய்' : 'Log New Period'}</span>
+          </button>
+        </div>
+
+        {/* Responsive Table */}
+        <div style={{ overflowX: 'auto' }}>
+          <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', fontSize: '0.84rem' }}>
+            <thead>
+              <tr style={{ background: '#fff1f2', borderBottom: '2px solid #fda4af' }}>
+                <th style={{ padding: '12px 14px', color: '#881337', fontWeight: 800, borderRadius: '10px 0 0 10px' }}>
+                  {language === 'ta' ? 'துவக்க தேதி' : 'Start Date'}
+                </th>
+                <th style={{ padding: '12px 14px', color: '#881337', fontWeight: 800 }}>
+                  {language === 'ta' ? 'முடிவு தேதி' : 'End Date'}
+                </th>
+                <th style={{ padding: '12px 14px', color: '#881337', fontWeight: 800 }}>
+                  {language === 'ta' ? 'இரத்தப்போக்கு அளவு' : 'Flow Level'}
+                </th>
+                <th style={{ padding: '12px 14px', color: '#881337', fontWeight: 800 }}>
+                  {language === 'ta' ? 'கால அளவு' : 'Duration'}
+                </th>
+                <th style={{ padding: '12px 14px', color: '#881337', fontWeight: 800 }}>
+                  {language === 'ta' ? 'அறிகுறிகள்' : 'Symptoms'}
+                </th>
+                <th style={{ padding: '12px 14px', color: '#881337', fontWeight: 800, borderRadius: '0 10px 10px 0' }}>
+                  {language === 'ta' ? 'நிலை' : 'Status'}
+                </th>
+              </tr>
+            </thead>
+            <tbody>
+              {/* Active Current Cycle Record */}
+              <tr style={{ borderBottom: '1px solid #fecdd3', background: '#fdf2f8' }}>
+                <td style={{ padding: '12px 14px', fontWeight: 800, color: '#be123c' }}>
+                  📅 {formData.startDate}
+                </td>
+                <td style={{ padding: '12px 14px', fontWeight: 800, color: '#be123c' }}>
+                  📅 {formData.endDate}
+                </td>
+                <td style={{ padding: '12px 14px' }}>
+                  <span style={{
+                    padding: '3px 10px',
+                    borderRadius: '12px',
+                    background: currentFlow === 'heavy' ? '#fee2e2' : currentFlow === 'medium' ? '#ffedd5' : '#fce7f3',
+                    color: currentFlow === 'heavy' ? '#dc2626' : currentFlow === 'medium' ? '#ea580c' : '#be185d',
+                    fontWeight: 800,
+                    fontSize: '0.76rem'
+                  }}>
+                    {currentFlow === 'heavy' ? '💧💧💧 அதிகம் (Heavy)' : currentFlow === 'medium' ? '💧💧 நடுத்தரம் (Normal)' : '💧 குறைவு (Light)'}
+                  </span>
+                </td>
+                <td style={{ padding: '12px 14px', fontWeight: 700, color: '#0f172a' }}>
+                  {formData.periodDuration} {language === 'ta' ? 'நாட்கள்' : 'days'}
+                </td>
+                <td style={{ padding: '12px 14px', color: '#64748b' }}>
+                  {formData.symptoms?.length > 0
+                    ? formData.symptoms.map(s => symptomLabels[s] || s).join(', ')
+                    : (language === 'ta' ? 'வயிற்று வலி (Cramps), உப்புசம்' : 'Cramps, Bloating')}
+                </td>
+                <td style={{ padding: '12px 14px' }}>
+                  <span style={{ padding: '3px 8px', borderRadius: '8px', background: '#dcfce7', color: '#15803d', fontWeight: 800, fontSize: '0.72rem' }}>
+                    ● {language === 'ta' ? 'செயலில் உள்ளது (Active)' : 'Active Cycle'}
+                  </span>
+                </td>
+              </tr>
+
+              {/* Past History Cycle 1 */}
+              <tr style={{ borderBottom: '1px solid #f1f5f9' }}>
+                <td style={{ padding: '12px 14px', color: '#334155', fontWeight: 700 }}>
+                  2026-08-12
+                </td>
+                <td style={{ padding: '12px 14px', color: '#334155', fontWeight: 700 }}>
+                  2026-08-17
+                </td>
+                <td style={{ padding: '12px 14px' }}>
+                  <span style={{ padding: '3px 10px', borderRadius: '12px', background: '#ffedd5', color: '#ea580c', fontWeight: 700, fontSize: '0.76rem' }}>
+                    💧💧 {language === 'ta' ? 'நடுத்தரம் (Medium)' : 'Medium Flow'}
+                  </span>
+                </td>
+                <td style={{ padding: '12px 14px', color: '#475569' }}>
+                  5 {language === 'ta' ? 'நாட்கள்' : 'days'}
+                </td>
+                <td style={{ padding: '12px 14px', color: '#64748b' }}>
+                  {language === 'ta' ? 'தலைவலி, சோர்வு' : 'Headache, Fatigue'}
+                </td>
+                <td style={{ padding: '12px 14px' }}>
+                  <span style={{ padding: '3px 8px', borderRadius: '8px', background: '#f1f5f9', color: '#475569', fontWeight: 700, fontSize: '0.72rem' }}>
+                    ✓ {language === 'ta' ? 'முடிந்தது' : 'Completed'}
+                  </span>
+                </td>
+              </tr>
+
+              {/* Past History Cycle 2 */}
+              <tr style={{ borderBottom: '1px solid #f1f5f9' }}>
+                <td style={{ padding: '12px 14px', color: '#334155', fontWeight: 700 }}>
+                  2026-07-15
+                </td>
+                <td style={{ padding: '12px 14px', color: '#334155', fontWeight: 700 }}>
+                  2026-07-20
+                </td>
+                <td style={{ padding: '12px 14px' }}>
+                  <span style={{ padding: '3px 10px', borderRadius: '12px', background: '#fce7f3', color: '#be185d', fontWeight: 700, fontSize: '0.76rem' }}>
+                    💧 {language === 'ta' ? 'சீரானது (Normal)' : 'Normal Flow'}
+                  </span>
+                </td>
+                <td style={{ padding: '12px 14px', color: '#475569' }}>
+                  5 {language === 'ta' ? 'நாட்கள்' : 'days'}
+                </td>
+                <td style={{ padding: '12px 14px', color: '#64748b' }}>
+                  {language === 'ta' ? 'முதுகு வலி' : 'Backache'}
+                </td>
+                <td style={{ padding: '12px 14px' }}>
+                  <span style={{ padding: '3px 8px', borderRadius: '8px', background: '#f1f5f9', color: '#475569', fontWeight: 700, fontSize: '0.72rem' }}>
+                    ✓ {language === 'ta' ? 'முடிந்தது' : 'Completed'}
+                  </span>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      {/* 4. DEDICATED BOTTOM CARDS: MENARCHE & MENOPAUSE (மெனோவார்க் & மெனோபாஸ்) */}
+      <div style={{
+        display: 'grid',
+        gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))',
+        gap: '18px',
+        marginBottom: '26px'
+      }}>
+        {/* Card 1: Menarche (மெனோவார்க்) */}
+        <div className="glass-card" style={{
+          padding: '24px',
+          borderRadius: '22px',
+          background: 'linear-gradient(135deg, #fdf2f8 0%, #fff1f2 100%)',
+          border: '2px solid #fbcfe8',
+          boxShadow: '0 6px 20px rgba(236, 72, 153, 0.08)',
+          display: 'flex',
+          flexDirection: 'column',
+          justifyContent: 'space-between'
+        }}>
+          <div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '10px' }}>
+              <span style={{ fontSize: '1.6rem' }}>🌿</span>
+              <div>
+                <h3 style={{ fontSize: '1.2rem', fontWeight: 800, color: '#831843', margin: 0 }}>
+                  {language === 'ta' ? 'மெனோவார்க் (முதல் மாதவிடாய் வழிகாட்டி)' : 'Menarche (First Period Hub)'}
+                </h3>
+                <span style={{ fontSize: '0.75rem', color: '#be185d', fontWeight: 700 }}>
+                  {language === 'ta' ? 'இளம் பெண்கள் & பூப்படைதல் விழிப்புணர்வு' : 'Puberty & First Cycle Education'}
+                </span>
+              </div>
+            </div>
+            <p style={{ fontSize: '0.86rem', color: '#64748b', lineHeight: '1.5', margin: '0 0 16px 0' }}>
+              {language === 'ta'
+                ? 'முதல் முறை மாதவிடாய் வரும்போது ஏற்படும் பயம் நீக்குதல், சுகாதார வழிகாட்டுதல்கள் மற்றும் இளம் பெண்களுக்கான உடல்நலக் குறிப்புகள்.'
+                : 'Fear-free first period guidance, puberty milestone tracking, hygienic pad care, and adolescent menstrual wellness.'}
+            </p>
+          </div>
+          <button
+            type="button"
+            onClick={() => setCycleMode('firstPeriod')}
+            style={{
+              background: 'linear-gradient(135deg, #ec4899 0%, #be185d 100%)',
+              color: 'white',
+              border: 'none',
+              padding: '11px 20px',
+              borderRadius: '14px',
+              fontWeight: 800,
+              fontSize: '0.88rem',
+              cursor: 'pointer',
+              display: 'inline-flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: '8px',
+              boxShadow: '0 4px 14px rgba(236, 72, 153, 0.3)'
+            }}
+          >
+            <span>🌿 {language === 'ta' ? 'மெனோவார்க் பகுதிக்குச் செல்' : 'Open Menarche Guide'}</span>
+          </button>
+        </div>
+
+        {/* Card 2: Menopause (மெனோபாஸ்) */}
+        <div className="glass-card" style={{
+          padding: '24px',
+          borderRadius: '22px',
+          background: 'linear-gradient(135deg, #fff7ed 0%, #ffedd5 100%)',
+          border: '2px solid #fed7aa',
+          boxShadow: '0 6px 20px rgba(234, 88, 12, 0.08)',
+          display: 'flex',
+          flexDirection: 'column',
+          justifyContent: 'space-between'
+        }}>
+          <div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '10px' }}>
+              <span style={{ fontSize: '1.6rem' }}>🌙</span>
+              <div>
+                <h3 style={{ fontSize: '1.2rem', fontWeight: 800, color: '#7c2d12', margin: 0 }}>
+                  {language === 'ta' ? 'மெனோபாஸ் (மாதவிடாய் நிறைவு நல்வாழ்வு)' : 'Menopause & Transition Hub'}
+                </h3>
+                <span style={{ fontSize: '0.75rem', color: '#c2410c', fontWeight: 700 }}>
+                  {language === 'ta' ? 'பெரிமெனோபாஸ் & ஹார்மோன் சமநிலை' : 'Perimenopause & Hormonal Balance'}
+                </span>
+              </div>
+            </div>
+            <p style={{ fontSize: '0.86rem', color: '#64748b', lineHeight: '1.5', margin: '0 0 16px 0' }}>
+              {language === 'ta'
+                ? 'மாதவிடாய் நிற்கும் பருவம், ஹாட் ஃப்ளாஷஸ் (உடல் சூடு), தூக்கமின்மை மற்றும் ஹார்மோன் மாற்றங்களுக்கான சுய பரிசோதனை & குறிப்புகள்.'
+                : 'Menopause symptom evaluation, hot flash management, bone health, mood swings, and transition self-assessment.'}
+            </p>
+          </div>
+          <button
+            type="button"
+            onClick={() => setCycleMode('menopause')}
+            style={{
+              background: 'linear-gradient(135deg, #ea580c 0%, #c2410c 100%)',
+              color: 'white',
+              border: 'none',
+              padding: '11px 20px',
+              borderRadius: '14px',
+              fontWeight: 800,
+              fontSize: '0.88rem',
+              cursor: 'pointer',
+              display: 'inline-flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: '8px',
+              boxShadow: '0 4px 14px rgba(234, 88, 12, 0.3)'
+            }}
+          >
+            <span>🌙 {language === 'ta' ? 'மெனோபாஸ் பகுதிக்குச் செல்' : 'Open Menopause Assessment'}</span>
+          </button>
         </div>
       </div>
 

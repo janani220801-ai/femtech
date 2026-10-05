@@ -124,64 +124,86 @@ export default function Navbar({ onOpenEmergency, onNavigate, onOpenNotification
 
       {/* Action Controls */}
       <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap', justifyContent: 'flex-end' }}>
-        {/* Global View Switcher: User View vs Administrator View (Visible Only to Janani Admin) */}
-        {isAuthorizedAdmin && (
-          <div style={{
+        {/* Global View Switcher: User View vs Administrator View */}
+        <div style={{
+          display: 'flex',
+          alignItems: 'center',
+          background: viewMode === 'admin' ? '#18181b' : '#f1f5f9',
+          border: viewMode === 'admin' ? '1.5px solid #f43f5e' : '1.5px solid var(--pink-300)',
+          borderRadius: 'var(--radius-full)',
+          padding: '3px',
+          boxShadow: viewMode === 'admin' ? '0 0 12px rgba(244,63,94,0.3)' : '0 2px 8px rgba(0,0,0,0.05)'
+        }}>
+          <button
+            onClick={switchToUser}
+            title={language === 'ta' ? 'பயனர் பார்வைக்கு மாறுக' : 'Switch to Personal Health Portal'}
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '6px',
+              padding: '6px 14px',
+              borderRadius: 'var(--radius-full)',
+              border: 'none',
+              background: viewMode === 'user' ? 'white' : 'transparent',
+              color: viewMode === 'user' ? 'var(--rose-primary)' : '#64748b',
+              fontWeight: viewMode === 'user' ? 800 : 600,
+              fontSize: '0.8rem',
+              cursor: 'pointer',
+              boxShadow: viewMode === 'user' ? '0 2px 6px rgba(0,0,0,0.08)' : 'none',
+              transition: 'all 0.2s ease'
+            }}
+          >
+            <Eye size={14} />
+            <span>{language === 'ta' ? '👤 பயனர் பார்வை' : '👤 User View'}</span>
+          </button>
+
+          <button
+            onClick={requestAdminMode}
+            title={language === 'ta' ? 'அட்மினிஸ்ட்ரேட்டர் பார்வைக்கு மாறுக (கடவுச்சொல் தேவை)' : 'Switch to Administrator Console (Password Protected)'}
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '6px',
+              padding: '6px 14px',
+              borderRadius: 'var(--radius-full)',
+              border: 'none',
+              background: viewMode === 'admin' ? 'var(--rose-gradient)' : 'transparent',
+              color: viewMode === 'admin' ? 'white' : '#64748b',
+              fontWeight: viewMode === 'admin' ? 800 : 600,
+              fontSize: '0.8rem',
+              cursor: 'pointer',
+              boxShadow: viewMode === 'admin' ? '0 4px 10px rgba(244,63,94,0.35)' : 'none',
+              transition: 'all 0.2s ease'
+            }}
+          >
+            <Shield size={14} />
+            <span>{language === 'ta' ? '🛡️ அட்மினிஸ்ட்ரேட்டர்' : '🛡️ Admin View'}</span>
+          </button>
+        </div>
+
+        {/* Quick Call Mother Button */}
+        <a
+          href={`tel:${(motherPhone || user?.emergencyContact?.phone || '+919840165432').replace(/[^0-9+]/g, '')}`}
+          style={{
+            background: 'linear-gradient(135deg, #ec4899 0%, #db2777 100%)',
+            color: 'white',
+            border: 'none',
+            padding: '7px 14px',
+            borderRadius: 'var(--radius-full)',
+            fontSize: '0.82rem',
+            fontWeight: 800,
+            cursor: 'pointer',
             display: 'flex',
             alignItems: 'center',
-            background: viewMode === 'admin' ? '#18181b' : '#f1f5f9',
-            border: viewMode === 'admin' ? '1.5px solid #f43f5e' : '1px solid var(--border-subtle)',
-            borderRadius: 'var(--radius-full)',
-            padding: '3px',
-            boxShadow: viewMode === 'admin' ? '0 0 12px rgba(244,63,94,0.3)' : 'none'
-          }}>
-            <button
-              onClick={switchToUser}
-              title="Switch to Personal Health Portal"
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: '6px',
-                padding: '6px 14px',
-                borderRadius: 'var(--radius-full)',
-                border: 'none',
-                background: viewMode === 'user' ? 'white' : 'transparent',
-                color: viewMode === 'user' ? 'var(--rose-primary)' : '#64748b',
-                fontWeight: viewMode === 'user' ? 700 : 500,
-                fontSize: '0.8rem',
-                cursor: 'pointer',
-                boxShadow: viewMode === 'user' ? '0 2px 6px rgba(0,0,0,0.08)' : 'none',
-                transition: 'all 0.2s ease'
-              }}
-            >
-              <Eye size={14} />
-              <span>{t('userViewMode')}</span>
-            </button>
-
-            <button
-              onClick={requestAdminMode}
-              title="Switch to Administrator Telemetry & Oversight"
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: '6px',
-                padding: '6px 14px',
-                borderRadius: 'var(--radius-full)',
-                border: 'none',
-                background: viewMode === 'admin' ? 'var(--rose-gradient)' : 'transparent',
-                color: viewMode === 'admin' ? 'white' : '#64748b',
-                fontWeight: viewMode === 'admin' ? 700 : 500,
-                fontSize: '0.8rem',
-                cursor: 'pointer',
-                boxShadow: viewMode === 'admin' ? '0 4px 10px rgba(244,63,94,0.35)' : 'none',
-                transition: 'all 0.2s ease'
-              }}
-            >
-              <Shield size={14} />
-              <span>{t('adminViewMode')}</span>
-            </button>
-          </div>
-        )}
+            gap: '6px',
+            textDecoration: 'none',
+            boxShadow: '0 4px 12px rgba(219, 39, 119, 0.35)'
+          }}
+          title={language === 'ta' ? `அம்மாவுக்கு உடனே அழை (${motherPhone || '+91 98401 65432'})` : `Call Mother (${motherPhone || '+91 98401 65432'})`}
+        >
+          <span>👩‍👧</span>
+          <span>{language === 'ta' ? 'அம்மாவை அழை' : 'Call Mom'}</span>
+        </a>
 
         {/* Confidential Anonymous Whisper Trigger Button */}
         <button

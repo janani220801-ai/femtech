@@ -42,9 +42,39 @@ import {
 export default function Settings({ onNavigate, onOpenNotifications }) {
   const { user } = useAuth();
   const { language, changeLanguage, t, languages } = useLanguage();
-  const { theme, setTheme, fontSize, setFontSize, largeText, toggleLargeText, highContrast, toggleHighContrast, logoStyle, setLogoStyle, profileAvatar, setProfileAvatar, animationMode, setAnimationMode } = useTheme();
+  const {
+    theme,
+    setTheme,
+    customColors,
+    saveCustomTheme,
+    fontSize,
+    setFontSize,
+    largeText,
+    toggleLargeText,
+    highContrast,
+    toggleHighContrast,
+    logoStyle,
+    setLogoStyle,
+    profileAvatar,
+    setProfileAvatar,
+    animationMode,
+    setAnimationMode
+  } = useTheme();
   const { viewMode, setViewMode, isAdmin } = useViewMode();
   const isAuthorizedAdmin = user?.email?.toLowerCase() === 'janani@femtech.health' || user?.role === 'admin';
+
+  // Custom Colors & Pay ₹99 Studio State
+  const [showColorModal, setShowColorModal] = useState(false);
+  const [customUnlocked, setCustomUnlocked] = useState(() => localStorage.getItem('femtech_custom_colors_unlocked') === 'true');
+  const [pickerPrimary, setPickerPrimary] = useState(customColors?.primary || '#be123c');
+  const [pickerStart, setPickerStart] = useState(customColors?.gradientStart || '#fb7185');
+  const [pickerEnd, setPickerEnd] = useState(customColors?.gradientEnd || '#881337');
+  const [pickerBg, setPickerBg] = useState(customColors?.bg || '#fff5f7');
+  const [pickerCard, setPickerCard] = useState(customColors?.card || '#ffffff');
+  const [paymentStep, setPaymentStep] = useState('picker'); // 'picker' | 'payment' | 'success'
+  const [selectedUpiApp, setSelectedUpiApp] = useState('gpay');
+  const [isProcessingPayment, setIsProcessingPayment] = useState(false);
+  const [customSavedToast, setCustomSavedToast] = useState(false);
   const {
     userPhone,
     motherName,
@@ -182,13 +212,146 @@ Daily Steps: 7,420 steps (Cadence: 104 spm)`;
     downloadAnchor.remove();
   };
 
+  // Custom Color Studio Presets & Handlers (Pay ₹99 Feature)
+  const colorPresets = [
+    {
+      name: '🌺 Coral Sunset',
+      primary: '#f43f5e',
+      start: '#fb7185',
+      end: '#be123c',
+      bg: '#fff1f2',
+      card: '#ffffff'
+    },
+    {
+      name: '🪻 Lavender Mist',
+      primary: '#8b5cf6',
+      start: '#c084fc',
+      end: '#6d28d9',
+      bg: '#faf5ff',
+      card: '#ffffff'
+    },
+    {
+      name: '🌿 Emerald Oasis',
+      primary: '#059669',
+      start: '#34d399',
+      end: '#047857',
+      bg: '#f0fdf4',
+      card: '#ffffff'
+    },
+    {
+      name: '☀️ Golden Sun',
+      primary: '#d97706',
+      start: '#facc15',
+      end: '#92400e',
+      bg: '#fffbeb',
+      card: '#ffffff'
+    },
+    {
+      name: '🍷 Velvet Burgundy',
+      primary: '#700b2b',
+      start: '#9f1239',
+      end: '#4c0519',
+      bg: '#fdf2f4',
+      card: '#ffffff'
+    },
+    {
+      name: '🩶 Slate Rose',
+      primary: '#db2777',
+      start: '#64748b',
+      end: '#be185d',
+      bg: '#f8fafc',
+      card: '#ffffff'
+    }
+  ];
+
+  const handleApplyPreset = (preset) => {
+    setPickerPrimary(preset.primary);
+    setPickerStart(preset.start);
+    setPickerEnd(preset.end);
+    setPickerBg(preset.bg);
+    setPickerCard(preset.card || '#ffffff');
+  };
+
+  const handleLivePreviewCustom = () => {
+    saveCustomTheme({
+      primary: pickerPrimary,
+      gradientStart: pickerStart,
+      gradientEnd: pickerEnd,
+      bg: pickerBg,
+      card: pickerCard
+    });
+    setCustomSavedToast(true);
+    setTimeout(() => setCustomSavedToast(false), 3000);
+  };
+
+  const handleSimulatePayment = () => {
+    setIsProcessingPayment(true);
+    setTimeout(() => {
+      setIsProcessingPayment(false);
+      setCustomUnlocked(true);
+      localStorage.setItem('femtech_custom_colors_unlocked', 'true');
+      saveCustomTheme({
+        primary: pickerPrimary,
+        gradientStart: pickerStart,
+        gradientEnd: pickerEnd,
+        bg: pickerBg,
+        card: pickerCard
+      });
+      setPaymentStep('success');
+      setCustomSavedToast(true);
+      setTimeout(() => setCustomSavedToast(false), 3500);
+    }, 1200);
+  };
+
   const themes = [
     {
       id: 'cherry-red',
-      name: t('themeCherryRed') || '🍒 Cherry Red (Crimson Velvet)',
+      name: language === 'ta' ? '🍒 செர்ரி ரெட் (Crimson Velvet)' : '🍒 Cherry Red (Crimson Velvet)',
       border: '#be123c',
       bg: '#fff0f3',
       primary: '#be123c'
+    },
+    {
+      id: 'whitish-red',
+      name: language === 'ta' ? '⚪ வெள்ளை & சிவப்பு (Whitish Red)' : '⚪ Pure White & Crimson Red',
+      border: '#dc2626',
+      bg: '#ffffff',
+      primary: '#dc2626'
+    },
+    {
+      id: 'burgundy-wine',
+      name: language === 'ta' ? '🍷 பர்கண்டி வைன் (Burgundy Wine)' : '🍷 Rich Bordeaux Burgundy',
+      border: '#700b2b',
+      bg: '#fdf2f4',
+      primary: '#700b2b'
+    },
+    {
+      id: 'sunshine-yellow',
+      name: language === 'ta' ? '☀️ சூரிய மஞ்சள் (Sunshine Yellow)' : '☀️ Sunshine Warm Gold',
+      border: '#eab308',
+      bg: '#fffdf0',
+      primary: '#ca8a04'
+    },
+    {
+      id: 'grey-pink',
+      name: language === 'ta' ? '🩶🌸 சாம்பல் & இளஞ்சிவப்பு (Grey & Pink)' : '🩶🌸 Slate Grey & Soft Pink',
+      border: '#db2777',
+      bg: '#f8fafc',
+      primary: '#db2777'
+    },
+    {
+      id: 'plain-grey',
+      name: language === 'ta' ? '🩶 எளிய சாம்பல் (Plain Grey)' : '🩶 Minimalist Slate Grey',
+      border: '#64748b',
+      bg: '#f8fafc',
+      primary: '#334155'
+    },
+    {
+      id: 'grey-red',
+      name: language === 'ta' ? '🩶❤️ சாம்பல் & அடர் சிவப்பு (Grey & Red)' : '🩶❤️ Charcoal Grey & Scarlet Red',
+      border: '#dc2626',
+      bg: '#f1f5f9',
+      primary: '#dc2626'
     },
     {
       id: 'ruby-crimson',
@@ -246,55 +409,13 @@ Daily Steps: 7,420 steps (Cadence: 104 spm)`;
       bg: '#09090b',
       primary: '#f43f5e'
     },
-    {
-      id: 'crimson-white',
-      name: t('themeCrimsonWhite') || '⚪ Pure White & Crimson Red',
-      border: '#dc2626',
-      bg: '#ffffff',
-      primary: '#dc2626'
-    },
-    {
-      id: 'emerald-gold',
-      name: t('themeEmeraldGold') || '👑 Royal Emerald & Gold',
-      border: '#eab308',
-      bg: '#f0fdf4',
-      primary: '#059669'
-    },
-    {
-      id: 'rose-gold',
-      name: t('themeRoseGold') || '✨ Sunset Rose Gold',
-      border: '#f59e0b',
-      bg: '#fff1f2',
-      primary: '#e11d48'
-    },
-    {
-      id: 'ocean-turquoise',
-      name: language === 'ta' ? '🌊 Ocean Turquoise (ஆழ்கடல் பிரகாசம்)' : '🌊 Ocean Turquoise (Azure Breeze)',
-      border: '#06b6d4',
-      bg: '#ecfeff',
-      primary: '#0891b2'
-    },
-    {
-      id: 'sunset-amber',
-      name: language === 'ta' ? '🌅 Sunset Amber (அந்தி மாலை தங்கம்)' : '🌅 Sunset Amber (Golden Twilight)',
-      border: '#f59e0b',
-      bg: '#fffbeb',
-      primary: '#d97706'
-    },
-    {
-      id: 'wild-berry-rose',
-      name: language === 'ta' ? '🫐 Wild Berry Rose (காட்டு மலர்)' : '🫐 Wild Berry Rose (Blossom Dew)',
-      border: '#e11d48',
-      bg: '#fff1f2',
-      primary: '#be123c'
-    },
-    {
-      id: 'forest-jade',
-      name: language === 'ta' ? '🌲 Forest Jade (பசுமை மரகதம்)' : '🌲 Forest Jade (Botanical Harmony)',
-      border: '#10b981',
-      bg: '#f0fdf4',
-      primary: '#047857'
-    }
+    ...(customUnlocked || theme === 'custom-palette' ? [{
+      id: 'custom-palette',
+      name: language === 'ta' ? '🎨 உங்கள் பிரத்யேக நிறம் (My Custom Color)' : '🎨 My Custom Palette (Active)',
+      border: customColors?.primary || '#be123c',
+      bg: customColors?.bg || '#fff5f7',
+      primary: customColors?.primary || '#be123c'
+    }] : [])
   ];
 
   const logoStyles = [
@@ -739,6 +860,720 @@ Daily Steps: 7,420 steps (Cadence: 104 spm)`;
           })}
         </div>
       </div>
+
+      {/* ============================================================ */}
+      {/* 🎨 PAY ₹99 & CUSTOMIZE YOUR OWN COLOR CARD & STUDIO MODAL   */}
+      {/* ============================================================ */}
+      <div
+        className="glass-card"
+        style={{
+          padding: '26px',
+          background: 'linear-gradient(135deg, rgba(255, 255, 255, 0.98) 0%, rgba(255, 241, 242, 0.6) 100%)',
+          borderRadius: 'var(--radius-lg)',
+          border: '2px solid rgba(225, 29, 72, 0.3)',
+          boxShadow: '0 10px 30px rgba(225, 29, 72, 0.1)',
+          position: 'relative',
+          overflow: 'hidden'
+        }}
+      >
+        <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', flexWrap: 'wrap', gap: '16px' }}>
+          <div style={{ display: 'flex', alignItems: 'flex-start', gap: '14px', maxWidth: '680px' }}>
+            <div
+              style={{
+                width: '46px',
+                height: '46px',
+                borderRadius: '14px',
+                background: 'var(--rose-gradient)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                boxShadow: '0 6px 18px rgba(225, 29, 72, 0.28)',
+                flexShrink: 0
+              }}
+            >
+              <Sparkles size={24} color="#ffffff" />
+            </div>
+            <div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+                <h2 style={{ fontSize: '1.25rem', color: 'var(--text-primary)', margin: 0, fontWeight: 800 }}>
+                  {language === 'ta'
+                    ? '🎨 கஸ்டமைஸ் யுவர் ஓன் கலர் (Customize Your Own Color)'
+                    : '🎨 Customize Your Own Color Scheme'}
+                </h2>
+                <span
+                  style={{
+                    fontSize: '0.74rem',
+                    fontWeight: 800,
+                    padding: '3px 10px',
+                    borderRadius: 'var(--radius-full)',
+                    background: customUnlocked ? '#ecfdf5' : 'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)',
+                    color: customUnlocked ? '#059669' : '#ffffff',
+                    boxShadow: customUnlocked ? 'none' : '0 2px 8px rgba(217, 119, 6, 0.3)'
+                  }}
+                >
+                  {customUnlocked
+                    ? (language === 'ta' ? '✅ பிரீமியம் அன்லாக் செய்யப்பட்டது' : '✅ Premium Lifetime Unlocked')
+                    : (language === 'ta' ? '💎 பிரீமியம் - ₹99 மட்டும்' : '💎 Premium - ₹99 One-time')}
+                </span>
+              </div>
+              <p style={{ fontSize: '0.86rem', color: 'var(--text-muted)', margin: '6px 0 12px 0', lineHeight: '1.5' }}>
+                {language === 'ta'
+                  ? 'உங்கள் சொந்த பிரைமரி நிறம், பின்னணி, கார்டுகள் மற்றும் கிரேடியன்ட் வண்ணங்களை நீங்களே தேர்ந்தெடுத்து ஆப்-ஐ உடனடியாக பிரத்யேகமாக மாற்றி அமையுங்கள்.'
+                  : 'Design your personalized primary accent, background tint, card surfaces, and gradient flow with live interactive preview.'}
+              </p>
+
+              {/* Active Custom Swatches */}
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap', marginBottom: '8px' }}>
+                <span style={{ fontSize: '0.78rem', color: '#64748b', fontWeight: 600 }}>
+                  {language === 'ta' ? 'தற்போதைய பிரத்யேக நிறங்கள்:' : 'Current Custom Swatches:'}
+                </span>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                  <div
+                    title="Primary"
+                    style={{
+                      width: '22px',
+                      height: '22px',
+                      borderRadius: '50%',
+                      background: pickerPrimary,
+                      border: '2px solid white',
+                      boxShadow: '0 2px 6px rgba(0,0,0,0.2)'
+                    }}
+                  />
+                  <div
+                    title="Gradient Start"
+                    style={{
+                      width: '22px',
+                      height: '22px',
+                      borderRadius: '50%',
+                      background: pickerStart,
+                      border: '2px solid white',
+                      boxShadow: '0 2px 6px rgba(0,0,0,0.2)'
+                    }}
+                  />
+                  <div
+                    title="Gradient End"
+                    style={{
+                      width: '22px',
+                      height: '22px',
+                      borderRadius: '50%',
+                      background: pickerEnd,
+                      border: '2px solid white',
+                      boxShadow: '0 2px 6px rgba(0,0,0,0.2)'
+                    }}
+                  />
+                  <div
+                    title="Background"
+                    style={{
+                      width: '22px',
+                      height: '22px',
+                      borderRadius: '50%',
+                      background: pickerBg,
+                      border: '2px solid #cbd5e1',
+                      boxShadow: '0 2px 6px rgba(0,0,0,0.1)'
+                    }}
+                  />
+                </div>
+                {theme === 'custom-palette' && (
+                  <span style={{ fontSize: '0.75rem', fontWeight: 700, color: 'var(--rose-primary)', background: 'var(--pink-50)', padding: '2px 8px', borderRadius: '8px' }}>
+                    {language === 'ta' ? '✓ தற்போது இயங்குகிறது' : '✓ Active Now'}
+                  </span>
+                )}
+              </div>
+            </div>
+          </div>
+
+          {/* Action Buttons */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap' }}>
+            <button
+              type="button"
+              onClick={() => {
+                setShowColorModal(true);
+                setPaymentStep('picker');
+              }}
+              style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '8px',
+                padding: '11px 22px',
+                borderRadius: 'var(--radius-full)',
+                background: 'var(--rose-gradient)',
+                color: '#ffffff',
+                border: 'none',
+                fontWeight: 700,
+                fontSize: '0.88rem',
+                cursor: 'pointer',
+                boxShadow: '0 6px 18px rgba(225, 29, 72, 0.35)',
+                transition: 'var(--transition)'
+              }}
+            >
+              <Palette size={16} />
+              <span>
+                {language === 'ta' ? '🎨 கலர் ஸ்டுடியோவை திற' : '🎨 Open Color Studio'}
+              </span>
+            </button>
+
+            <button
+              type="button"
+              onClick={handleLivePreviewCustom}
+              style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '8px',
+                padding: '10px 18px',
+                borderRadius: 'var(--radius-full)',
+                background: '#ffffff',
+                color: 'var(--rose-primary)',
+                border: '1.5px solid var(--rose-primary)',
+                fontWeight: 700,
+                fontSize: '0.86rem',
+                cursor: 'pointer',
+                transition: 'var(--transition)'
+              }}
+            >
+              <Sparkles size={15} />
+              <span>
+                {language === 'ta' ? '👁️ நேரடி முன்னோட்டம்' : '👁️ Live Preview'}
+              </span>
+            </button>
+          </div>
+        </div>
+
+        {customSavedToast && (
+          <div
+            style={{
+              marginTop: '14px',
+              padding: '10px 16px',
+              borderRadius: 'var(--radius-md)',
+              background: '#ecfdf5',
+              border: '1px solid #10b981',
+              color: '#065f46',
+              fontSize: '0.84rem',
+              fontWeight: 700,
+              display: 'flex',
+              alignItems: 'center',
+              gap: '8px'
+            }}
+          >
+            <CheckCircle2 size={16} color="#10b981" />
+            <span>
+              {language === 'ta'
+                ? '🎉 உங்கள் பிரத்யேக வண்ண திட்டம் வெற்றிகரமாக செயல்படுத்தப்பட்டது!'
+                : '🎉 Custom theme palette successfully applied to FemTech!'}
+            </span>
+          </div>
+        )}
+      </div>
+
+      {/* ============================================================ */}
+      {/* INTERACTIVE CUSTOM COLOR STUDIO MODAL (PAY ₹99)              */}
+      {/* ============================================================ */}
+      {showColorModal && (
+        <div
+          style={{
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            background: 'rgba(15, 23, 42, 0.72)',
+            backdropFilter: 'blur(8px)',
+            WebkitBackdropFilter: 'blur(8px)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            zIndex: 99999,
+            padding: '16px'
+          }}
+          onClick={(e) => {
+            if (e.target === e.currentTarget) setShowColorModal(false);
+          }}
+        >
+          <div
+            style={{
+              background: '#ffffff',
+              borderRadius: '24px',
+              width: '100%',
+              maxWidth: '680px',
+              maxHeight: '92vh',
+              overflowY: 'auto',
+              boxShadow: '0 24px 60px rgba(0, 0, 0, 0.3)',
+              border: '1.5px solid rgba(225, 29, 72, 0.25)',
+              position: 'relative'
+            }}
+          >
+            {/* Modal Header */}
+            <div
+              style={{
+                padding: '20px 26px',
+                borderBottom: '1px solid #f1f5f9',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                background: 'linear-gradient(135deg, #fff1f2 0%, #ffffff 100%)',
+                borderTopLeftRadius: '24px',
+                borderTopRightRadius: '24px'
+              }}
+            >
+              <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                <Palette size={22} color="var(--rose-primary)" />
+                <div>
+                  <h3 style={{ margin: 0, fontSize: '1.15rem', color: '#1e293b', fontWeight: 800 }}>
+                    {language === 'ta'
+                      ? '🎨 FemTech பிரத்யேக வண்ண ஸ்டுடியோ (Pay ₹99)'
+                      : '🎨 FemTech Custom Color Studio & Palette (Pay ₹99)'}
+                  </h3>
+                  <span style={{ fontSize: '0.78rem', color: '#64748b' }}>
+                    {language === 'ta'
+                      ? 'விருப்பமான வண்ணங்களை தேர்வு செய்து உடனே முன்னோட்டம் பாருங்கள்'
+                      : 'Customize and preview your bespoke color scheme in real time'}
+                  </span>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setShowColorModal(false)}
+                style={{
+                  background: '#f1f5f9',
+                  border: 'none',
+                  borderRadius: '50%',
+                  width: '34px',
+                  height: '34px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  cursor: 'pointer',
+                  fontWeight: 800,
+                  color: '#64748b'
+                }}
+              >
+                ✕
+              </button>
+            </div>
+
+            {/* Modal Content */}
+            <div style={{ padding: '24px 26px' }}>
+              {paymentStep === 'picker' && (
+                <>
+                  {/* Presets Row */}
+                  <div style={{ marginBottom: '22px' }}>
+                    <div style={{ fontSize: '0.84rem', fontWeight: 700, color: '#1e293b', marginBottom: '8px' }}>
+                      ✨ {language === 'ta' ? 'விரைவு தயார் வண்ணங்கள் (Quick Presets):' : 'Quick Presets (1-Click Selection):'}
+                    </div>
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(130px, 1fr))', gap: '8px' }}>
+                      {colorPresets.map((preset) => (
+                        <button
+                          key={preset.name}
+                          type="button"
+                          onClick={() => handleApplyPreset(preset)}
+                          style={{
+                            padding: '8px 10px',
+                            borderRadius: '12px',
+                            border: '1px solid #e2e8f0',
+                            background: '#f8fafc',
+                            cursor: 'pointer',
+                            textAlign: 'left',
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '6px',
+                            fontSize: '0.78rem',
+                            fontWeight: 600,
+                            color: '#334155'
+                          }}
+                        >
+                          <span
+                            style={{
+                              width: '14px',
+                              height: '14px',
+                              borderRadius: '50%',
+                              background: preset.primary,
+                              display: 'inline-block',
+                              flexShrink: 0
+                            }}
+                          />
+                          <span>{preset.name}</span>
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Color Pickers Grid */}
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '14px', marginBottom: '22px' }}>
+                    {/* Primary Color */}
+                    <div style={{ background: '#f8fafc', padding: '12px', borderRadius: '14px', border: '1px solid #e2e8f0' }}>
+                      <label style={{ display: 'block', fontSize: '0.78rem', fontWeight: 700, color: '#334155', marginBottom: '6px' }}>
+                        🎯 {language === 'ta' ? 'பிரைமரி நிறம் (Primary):' : 'Primary Accent:'}
+                      </label>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                        <input
+                          type="color"
+                          value={pickerPrimary}
+                          onChange={(e) => setPickerPrimary(e.target.value)}
+                          style={{ width: '40px', height: '36px', border: 'none', borderRadius: '8px', cursor: 'pointer' }}
+                        />
+                        <input
+                          type="text"
+                          value={pickerPrimary}
+                          onChange={(e) => setPickerPrimary(e.target.value)}
+                          style={{ flex: 1, padding: '6px 10px', borderRadius: '8px', border: '1px solid #cbd5e1', fontSize: '0.8rem', fontWeight: 600 }}
+                        />
+                      </div>
+                    </div>
+
+                    {/* Gradient Start */}
+                    <div style={{ background: '#f8fafc', padding: '12px', borderRadius: '14px', border: '1px solid #e2e8f0' }}>
+                      <label style={{ display: 'block', fontSize: '0.78rem', fontWeight: 700, color: '#334155', marginBottom: '6px' }}>
+                        🌈 {language === 'ta' ? 'கிரேடியன்ட் தொடக்கம்:' : 'Gradient Start:'}
+                      </label>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                        <input
+                          type="color"
+                          value={pickerStart}
+                          onChange={(e) => setPickerStart(e.target.value)}
+                          style={{ width: '40px', height: '36px', border: 'none', borderRadius: '8px', cursor: 'pointer' }}
+                        />
+                        <input
+                          type="text"
+                          value={pickerStart}
+                          onChange={(e) => setPickerStart(e.target.value)}
+                          style={{ flex: 1, padding: '6px 10px', borderRadius: '8px', border: '1px solid #cbd5e1', fontSize: '0.8rem', fontWeight: 600 }}
+                        />
+                      </div>
+                    </div>
+
+                    {/* Gradient End */}
+                    <div style={{ background: '#f8fafc', padding: '12px', borderRadius: '14px', border: '1px solid #e2e8f0' }}>
+                      <label style={{ display: 'block', fontSize: '0.78rem', fontWeight: 700, color: '#334155', marginBottom: '6px' }}>
+                        🌈 {language === 'ta' ? 'கிரேடியன்ட் முடிவு:' : 'Gradient End:'}
+                      </label>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                        <input
+                          type="color"
+                          value={pickerEnd}
+                          onChange={(e) => setPickerEnd(e.target.value)}
+                          style={{ width: '40px', height: '36px', border: 'none', borderRadius: '8px', cursor: 'pointer' }}
+                        />
+                        <input
+                          type="text"
+                          value={pickerEnd}
+                          onChange={(e) => setPickerEnd(e.target.value)}
+                          style={{ flex: 1, padding: '6px 10px', borderRadius: '8px', border: '1px solid #cbd5e1', fontSize: '0.8rem', fontWeight: 600 }}
+                        />
+                      </div>
+                    </div>
+
+                    {/* Background Tint */}
+                    <div style={{ background: '#f8fafc', padding: '12px', borderRadius: '14px', border: '1px solid #e2e8f0' }}>
+                      <label style={{ display: 'block', fontSize: '0.78rem', fontWeight: 700, color: '#334155', marginBottom: '6px' }}>
+                        🖼️ {language === 'ta' ? 'பின்னணி நிறம் (Background):' : 'Background Tint:'}
+                      </label>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                        <input
+                          type="color"
+                          value={pickerBg}
+                          onChange={(e) => setPickerBg(e.target.value)}
+                          style={{ width: '40px', height: '36px', border: 'none', borderRadius: '8px', cursor: 'pointer' }}
+                        />
+                        <input
+                          type="text"
+                          value={pickerBg}
+                          onChange={(e) => setPickerBg(e.target.value)}
+                          style={{ flex: 1, padding: '6px 10px', borderRadius: '8px', border: '1px solid #cbd5e1', fontSize: '0.8rem', fontWeight: 600 }}
+                        />
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Live Component Preview Card */}
+                  <div
+                    style={{
+                      padding: '18px',
+                      borderRadius: '16px',
+                      background: `linear-gradient(135deg, ${pickerBg} 0%, #ffffff 100%)`,
+                      border: `1.5px solid ${pickerPrimary}40`,
+                      marginBottom: '22px'
+                    }}
+                  >
+                    <div style={{ fontSize: '0.82rem', fontWeight: 700, color: '#1e293b', marginBottom: '10px' }}>
+                      👁️ {language === 'ta' ? 'நேரடி கூறு முன்னோட்டம் (Live Component Preview):' : 'Live Component Preview:'}
+                    </div>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flexWrap: 'wrap' }}>
+                      {/* Preview Button */}
+                      <button
+                        type="button"
+                        style={{
+                          padding: '10px 20px',
+                          borderRadius: 'var(--radius-full)',
+                          background: `linear-gradient(135deg, ${pickerStart} 0%, ${pickerPrimary} 50%, ${pickerEnd} 100%)`,
+                          color: '#ffffff',
+                          border: 'none',
+                          fontWeight: 700,
+                          fontSize: '0.85rem',
+                          boxShadow: `0 4px 14px ${pickerPrimary}55`
+                        }}
+                      >
+                        🌸 {language === 'ta' ? 'மாதிரி பட்டன்' : 'Sample Button'}
+                      </button>
+
+                      {/* Preview Badge */}
+                      <span
+                        style={{
+                          padding: '5px 12px',
+                          borderRadius: 'var(--radius-full)',
+                          background: `${pickerPrimary}15`,
+                          color: pickerPrimary,
+                          border: `1px solid ${pickerPrimary}35`,
+                          fontWeight: 700,
+                          fontSize: '0.78rem'
+                        }}
+                      >
+                        ✓ {language === 'ta' ? 'மாதிரி பேட்ஜ்' : 'Sample Badge'}
+                      </span>
+
+                      {/* Preview Card */}
+                      <div
+                        style={{
+                          padding: '8px 14px',
+                          borderRadius: '10px',
+                          background: pickerCard,
+                          border: `1px solid ${pickerPrimary}30`,
+                          fontSize: '0.78rem',
+                          fontWeight: 600,
+                          color: '#334155'
+                        }}
+                      >
+                        📋 {language === 'ta' ? 'கார்டு பின்னணி' : 'Card Surface'}
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Action Buttons in Modal */}
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '12px', flexWrap: 'wrap' }}>
+                    <button
+                      type="button"
+                      onClick={handleLivePreviewCustom}
+                      style={{
+                        padding: '11px 20px',
+                        borderRadius: 'var(--radius-full)',
+                        background: '#ffffff',
+                        border: '1.5px solid #cbd5e1',
+                        color: '#334155',
+                        fontWeight: 700,
+                        fontSize: '0.86rem',
+                        cursor: 'pointer'
+                      }}
+                    >
+                      👁️ {language === 'ta' ? 'இலவச நேரடி முன்னோட்டம் (Free Preview)' : 'Free Live Preview'}
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => {
+                        if (customUnlocked) {
+                          handleLivePreviewCustom();
+                          setShowColorModal(false);
+                        } else {
+                          setPaymentStep('payment');
+                        }
+                      }}
+                      style={{
+                        padding: '12px 26px',
+                        borderRadius: 'var(--radius-full)',
+                        background: 'linear-gradient(135deg, #f59e0b 0%, #ea580c 100%)',
+                        color: '#ffffff',
+                        border: 'none',
+                        fontWeight: 800,
+                        fontSize: '0.9rem',
+                        cursor: 'pointer',
+                        boxShadow: '0 6px 18px rgba(234, 88, 12, 0.35)'
+                      }}
+                    >
+                      {customUnlocked
+                        ? (language === 'ta' ? '💾 வண்ணங்களை சேமி (Save Colors)' : '💾 Save Custom Colors')
+                        : (language === 'ta' ? '💎 ₹99 செலுத்தி நிரந்தரமாக சேமி (Pay ₹99 & Unlock)' : '💎 Pay ₹99 & Unlock Lifetime')}
+                    </button>
+                  </div>
+                </>
+              )}
+
+              {/* Payment Simulator Step */}
+              {paymentStep === 'payment' && (
+                <div>
+                  <div style={{ textAlign: 'center', marginBottom: '20px' }}>
+                    <div
+                      style={{
+                        width: '56px',
+                        height: '56px',
+                        borderRadius: '50%',
+                        background: 'linear-gradient(135deg, #fef3c7 0%, #fde68a 100%)',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        margin: '0 auto 10px auto'
+                      }}
+                    >
+                      <Sparkles size={28} color="#d97706" />
+                    </div>
+                    <h4 style={{ margin: '0 0 4px 0', fontSize: '1.25rem', color: '#1e293b', fontWeight: 800 }}>
+                      ₹99 {language === 'ta' ? 'ஒருமுறை கட்டணம் (One-time Access)' : 'One-time Payment'}
+                    </h4>
+                    <p style={{ margin: 0, fontSize: '0.84rem', color: '#64748b' }}>
+                      {language === 'ta'
+                        ? 'வாழ்நாள் முழுவதும் நீங்கள் விரும்பும் வண்ணங்களை எத்தனை முறை வேண்டுமானாலும் மாற்றிக்கொள்ளலாம்.'
+                        : 'Lifetime unlimited custom color palette creation & dynamic theme switcher.'}
+                    </p>
+                  </div>
+
+                  {/* UPI Method Selection */}
+                  <div style={{ marginBottom: '18px' }}>
+                    <span style={{ fontSize: '0.8rem', fontWeight: 700, color: '#334155', display: 'block', marginBottom: '8px' }}>
+                      {language === 'ta' ? 'கட்டண முறையை தேர்வு செய்க (Select UPI App):' : 'Select Payment Method:'}
+                    </span>
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(130px, 1fr))', gap: '10px' }}>
+                      {[
+                        { id: 'gpay', label: 'Google Pay', icon: '🟢' },
+                        { id: 'phonepe', label: 'PhonePe', icon: '🟣' },
+                        { id: 'paytm', label: 'Paytm UPI', icon: '🔵' },
+                        { id: 'card', label: 'Debit / Card', icon: '💳' }
+                      ].map((app) => (
+                        <button
+                          key={app.id}
+                          type="button"
+                          onClick={() => setSelectedUpiApp(app.id)}
+                          style={{
+                            padding: '12px',
+                            borderRadius: '12px',
+                            border: selectedUpiApp === app.id ? '2px solid var(--rose-primary)' : '1px solid #e2e8f0',
+                            background: selectedUpiApp === app.id ? '#fff1f2' : '#ffffff',
+                            cursor: 'pointer',
+                            textAlign: 'center',
+                            fontWeight: 700,
+                            fontSize: '0.84rem',
+                            color: selectedUpiApp === app.id ? 'var(--rose-primary)' : '#334155'
+                          }}
+                        >
+                          <div style={{ fontSize: '1.2rem', marginBottom: '4px' }}>{app.icon}</div>
+                          {app.label}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Simulator Guarantee Banner */}
+                  <div
+                    style={{
+                      background: '#f8fafc',
+                      padding: '12px',
+                      borderRadius: '12px',
+                      border: '1px solid #e2e8f0',
+                      fontSize: '0.78rem',
+                      color: '#64748b',
+                      lineHeight: '1.4',
+                      marginBottom: '20px'
+                    }}
+                  >
+                    🔒 <strong>256-Bit SSL Secured Payment Simulator:</strong> {language === 'ta' ? 'மாதிரி கட்டண பரிவர்த்தனை சோதனை. கிளிக் செய்தவுடன் உடனடி அன்லாக் செய்யப்படும்.' : 'Test simulation for IEEE EPICS evaluation. Unlocks immediately upon clicking.'}
+                  </div>
+
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '12px' }}>
+                    <button
+                      type="button"
+                      onClick={() => setPaymentStep('picker')}
+                      style={{
+                        padding: '10px 18px',
+                        borderRadius: 'var(--radius-full)',
+                        background: '#f1f5f9',
+                        border: 'none',
+                        color: '#64748b',
+                        fontWeight: 700,
+                        fontSize: '0.84rem',
+                        cursor: 'pointer'
+                      }}
+                    >
+                      ← {language === 'ta' ? 'பின்செல்' : 'Back'}
+                    </button>
+
+                    <button
+                      type="button"
+                      disabled={isProcessingPayment}
+                      onClick={handleSimulatePayment}
+                      style={{
+                        padding: '12px 28px',
+                        borderRadius: 'var(--radius-full)',
+                        background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
+                        color: '#ffffff',
+                        border: 'none',
+                        fontWeight: 800,
+                        fontSize: '0.92rem',
+                        cursor: 'pointer',
+                        boxShadow: '0 6px 18px rgba(16, 185, 129, 0.35)',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '8px'
+                      }}
+                    >
+                      {isProcessingPayment ? (
+                        <>
+                          <span>⏳ {language === 'ta' ? 'பரிசீலிக்கப்படுகிறது...' : 'Processing ₹99...'}</span>
+                        </>
+                      ) : (
+                        <>
+                          <span>💳 {language === 'ta' ? '₹99 செலுத்துக (Pay ₹99 Now)' : 'Pay ₹99 Now & Activate'}</span>
+                        </>
+                      )}
+                    </button>
+                  </div>
+                </div>
+              )}
+
+              {/* Success Confirmation Step */}
+              {paymentStep === 'success' && (
+                <div style={{ textAlign: 'center', padding: '20px 0' }}>
+                  <div
+                    style={{
+                      width: '64px',
+                      height: '64px',
+                      borderRadius: '50%',
+                      background: '#ecfdf5',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      margin: '0 auto 14px auto',
+                      border: '2px solid #10b981'
+                    }}
+                  >
+                    <CheckCircle2 size={36} color="#10b981" />
+                  </div>
+                  <h4 style={{ margin: '0 0 6px 0', fontSize: '1.3rem', color: '#065f46', fontWeight: 800 }}>
+                    {language === 'ta' ? '🎉 வாழ்த்துகள்! ₹99 கட்டணம் வெற்றிகரமானது' : '🎉 Payment Successful! ₹99 Verified'}
+                  </h4>
+                  <p style={{ margin: '0 0 20px 0', fontSize: '0.86rem', color: '#64748b' }}>
+                    {language === 'ta'
+                      ? 'உங்கள் பிரத்யேக வண்ண திட்டம் செயல்படுத்தப்பட்டுள்ளது. இனி எப்போது வேண்டுமானாலும் உங்கள் விருப்ப வண்ணங்களை மாற்றிக்கொள்ளலாம்.'
+                      : 'Your bespoke color palette is now permanently active and saved across your FemTech app.'}
+                  </p>
+                  <button
+                    type="button"
+                    onClick={() => setShowColorModal(false)}
+                    style={{
+                      padding: '11px 26px',
+                      borderRadius: 'var(--radius-full)',
+                      background: 'var(--rose-gradient)',
+                      color: '#ffffff',
+                      border: 'none',
+                      fontWeight: 800,
+                      fontSize: '0.88rem',
+                      cursor: 'pointer',
+                      boxShadow: '0 6px 18px rgba(225, 29, 72, 0.35)'
+                    }}
+                  >
+                    {language === 'ta' ? 'ஆப்-க்கு திரும்பு' : 'Done & Return to App'}
+                  </button>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* 2. PROFILE AVATAR PHOTO SELECTION (Requested: Girl with Wings & Girl Hugging Knees) */}
       <div className="glass-card" style={{ padding: '26px', background: 'white', borderRadius: 'var(--radius-lg)', border: '1px solid var(--border-subtle)' }}>

@@ -32,7 +32,7 @@ import {
 export default function Sidebar({ currentTab, onNavigate }) {
   const { user, logout } = useAuth();
   const { t, language } = useLanguage();
-  const { isAdmin } = useViewMode();
+  const { isAdmin, requestAdminMode, switchToUser } = useViewMode();
 
   // Collapsible state for EVERY category
   const [expandedSections, setExpandedSections] = useState({
@@ -85,7 +85,6 @@ export default function Sidebar({ currentTab, onNavigate }) {
       category: t('catHealth') || "WOMEN'S HEALTH",
       items: [
         { id: 'cycle-tracker', label: t('cycleTracker') || 'Cycle Tracker & Flow', icon: CalendarHeart },
-        { id: 'menopause-check', label: getMenopauseLabel(), icon: Flame, badge: 'Transition' },
         { id: 'health-guide', label: getAgeGuideLabel(), icon: BookOpen, badge: `Age ${user?.age || '20'}` },
         { id: 'pcos-check', label: t('pcosCheck') || 'PCOS Hormone Check', icon: HeartPulse },
         { id: 'pregnancy', label: t('pregnancy') || 'Pregnancy Wellness', icon: Baby },
@@ -106,7 +105,7 @@ export default function Sidebar({ currentTab, onNavigate }) {
       category: t('catCare') || 'SUPPORT & CARE',
       items: [
         { id: 'nearby-care', label: t('nearbyCare') || 'Urgent Care Finder', icon: Hospital },
-        { id: 'divas-meeting', label: t('divasMeeting') || t('deepasMeeting') || "Diva's Sisterhood Forum", icon: Users },
+        { id: 'divas-meeting', label: language === 'ta' ? '🌸 திவாஸ் கம்யூனிட்டி மீட்டிங்' : "🌸 Diva's Community Meeting", icon: Users },
         { id: 'ai-assistant', label: t('femtechAI') || 'FT Chatbox', icon: Bot, isHighlight: true },
         {
           id: 'anonymous-whisper',
@@ -364,6 +363,35 @@ export default function Sidebar({ currentTab, onNavigate }) {
             </div>
           </div>
         )}
+
+        {/* Administrator Mode Trigger */}
+        <button
+          type="button"
+          onClick={() => {
+            if (isAdmin) switchToUser();
+            else requestAdminMode();
+          }}
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            gap: '8px',
+            width: '100%',
+            padding: '9px 14px',
+            borderRadius: '12px',
+            border: isAdmin ? '1.5px solid #f43f5e' : '1.5px solid #cbd5e1',
+            background: isAdmin ? 'linear-gradient(135deg, #18181b 0%, #27272a 100%)' : '#f8fafc',
+            color: isAdmin ? '#f43f5e' : '#334155',
+            fontWeight: 800,
+            fontSize: '0.82rem',
+            cursor: 'pointer',
+            transition: 'all 0.15s ease'
+          }}
+          title={language === 'ta' ? 'அட்மினிஸ்ட்ரேட்டர் கண்காணிப்பு மையம் (கடவுச்சொல் தேவை)' : 'Administrator Console (Password Protected)'}
+        >
+          <Shield size={16} color={isAdmin ? '#f43f5e' : '#64748b'} />
+          <span>{isAdmin ? (language === 'ta' ? '👤 பயனர் பார்வைக்கு மாறு' : 'Switch to User View') : (language === 'ta' ? '🛡️ அட்மினிஸ்ட்ரேட்டர் வியூ' : '🛡️ Admin View')}</span>
+        </button>
 
         <button
           type="button"

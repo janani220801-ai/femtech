@@ -132,7 +132,7 @@ export default function App() {
         return <PregnancyWellness />;
       case 'menopause-check':
       case 'menopause':
-        return <MenopauseCheck onNavigate={setCurrentTab} />;
+        return <CycleTracker initialMode="menopause" />;
       case 'ai-assistant':
         return <AIAssistant onOpenEmergency={() => setShowEmergencyModal(true)} />;
       case 'wearable':

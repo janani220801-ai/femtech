@@ -16,8 +16,8 @@ export default function AdminAuthModal() {
   const isTamil = language === 'ta';
 
   const handleAutofill = () => {
-    setEmail('admin@femtech.org');
-    setPassword('admin123');
+    setEmail('janani22_janani220801');
+    setPassword('janani2222 jwa2217');
   };
 
   const handleSubmit = async (e) => {
@@ -141,7 +141,7 @@ export default function AdminAuthModal() {
             </button>
           </div>
           <div style={{ fontSize: '0.82rem', color: '#e4e4e7', fontFamily: 'monospace' }}>
-            ID: <strong style={{ color: '#fff' }}>admin@femtech.org</strong> &nbsp;|&nbsp; Pass: <strong style={{ color: '#fff' }}>admin123</strong>
+            ID: <strong style={{ color: '#fff' }}>janani22_janani220801</strong> &nbsp;|&nbsp; Pass: <strong style={{ color: '#fff' }}>janani2222 jwa2217</strong>
           </div>
         </div>
 
@@ -177,7 +177,7 @@ export default function AdminAuthModal() {
               required
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              placeholder="admin@femtech.org"
+              placeholder="janani22_janani220801"
               style={{
                 width: '100%',
                 padding: '12px 14px',
