@@ -355,56 +355,56 @@ Daily Steps: 7,420 steps (Cadence: 104 spm)`;
     },
     {
       id: 'ruby-crimson',
-      name: t('themeRubyCrimson') || '🍷 Deep Ruby Crimson (செர்ரி ரூபி)',
+      name: language === 'ta' ? '🍷 ஆழ்ந்த ரூபி சிவப்பு (Ruby Crimson)' : '🍷 Deep Ruby Crimson',
       border: '#990024',
       bg: '#ffeef2',
       primary: '#990024'
     },
     {
       id: 'soft-pink',
-      name: t('themeSoftPink') || '🌸 Soft Pink (Rose Pastel)',
+      name: language === 'ta' ? '🌸 மென்மையான இளஞ்சிவப்பு (Soft Pink)' : '🌸 Soft Pink (Rose Pastel)',
       border: 'var(--pink-400)',
       bg: '#fff1f2',
       primary: '#e11d48'
     },
     {
       id: 'light-lavender',
-      name: t('themeLavender') || '💜 Light Lavender',
+      name: language === 'ta' ? '💜 மென்மையான லாவெண்டர் (Lavender)' : '💜 Light Lavender',
       border: '#a855f7',
       bg: '#faf5ff',
       primary: '#7c3aed'
     },
     {
       id: 'soft-sage',
-      name: t('themeSage') || '🌿 Soft Sage (Herbal Mint)',
+      name: language === 'ta' ? '🌿 மூலிகை முனிவர் (Sage Green)' : '🌿 Soft Sage (Herbal Mint)',
       border: '#10b981',
       bg: '#ecfdf5',
       primary: '#059669'
     },
     {
       id: 'warm-peach',
-      name: t('themePeach') || '🍑 Warm Peach (Sunrise Coral)',
+      name: language === 'ta' ? '🍑 வெதுவெதுப்பான பீச் (Peach)' : '🍑 Warm Peach (Sunrise Coral)',
       border: '#f97316',
       bg: '#fff7ed',
       primary: '#ea580c'
     },
     {
       id: 'sapphire-blue',
-      name: t('themeSapphire') || '💙 Sapphire Blue (Ocean Serenity)',
+      name: language === 'ta' ? '💙 சஃபையர் நீலம் (Sapphire Blue)' : '💙 Sapphire Blue (Ocean Serenity)',
       border: '#3b82f6',
       bg: '#eff6ff',
       primary: '#2563eb'
     },
     {
       id: 'midnight-plum',
-      name: t('themePlum') || '🌙 Midnight Plum (Royal Velvet)',
+      name: language === 'ta' ? '🌙 மிட்நைட் பிளம் (Midnight Plum)' : '🌙 Midnight Plum (Royal Velvet)',
       border: '#9333ea',
       bg: '#faf5ff',
       primary: '#6b21a8'
     },
     {
       id: 'onyx-black',
-      name: t('themeOnyx') || '🖤 Onyx Black (AMOLED Midnight)',
+      name: language === 'ta' ? '🖤 ஆனிக்ஸ் கருப்பு (Onyx Black)' : '🖤 Onyx Black (AMOLED Midnight)',
       border: '#f43f5e',
       bg: '#09090b',
       primary: '#f43f5e'
@@ -696,7 +696,7 @@ Daily Steps: 7,420 steps (Cadence: 104 spm)`;
 
       {/* ANIMATION & MOTION CONTROLS */}
       <div className="glass-card" style={{ padding: '26px', background: 'white', borderRadius: 'var(--radius-lg)', border: '1px solid var(--border-subtle)' }}>
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '14px', flexWrap: 'wrap', gap: '10px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '16px', flexWrap: 'wrap', gap: '12px' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
             <Sparkles size={20} color="var(--rose-primary)" />
             <div>
@@ -706,27 +706,91 @@ Daily Steps: 7,420 steps (Cadence: 104 spm)`;
               <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', margin: '4px 0 0 0' }}>
                 {language === 'ta'
                   ? 'அனிமேஷன் வேண்டாம் என நீங்கள் தேர்வு செய்தால் அனைத்து அனிமேஷன்களும், மிதக்கும் இதழ்களும் உடனடியாக ரத்து செய்யப்படும்.'
-                  : 'Turn off animations completely to stop all movement, page transitions, and floating petals.'}
+                  : 'Toggle animations ON or OFF. Turning OFF completely disables floating blossoms, spring movements, and motion.'}
               </p>
             </div>
           </div>
+
+          {/* Master ON / OFF Toggle Pill */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', background: '#f1f5f9', padding: '4px', borderRadius: '24px' }}>
+            <button
+              type="button"
+              onClick={() => setAnimationMode('rich')}
+              style={{
+                padding: '6px 14px',
+                borderRadius: '20px',
+                border: 'none',
+                background: animationMode !== 'none' ? 'var(--rose-gradient)' : 'transparent',
+                color: animationMode !== 'none' ? '#ffffff' : '#64748b',
+                fontWeight: 700,
+                fontSize: '0.82rem',
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '6px',
+                transition: 'all 0.2s ease',
+                boxShadow: animationMode !== 'none' ? '0 2px 8px rgba(190, 18, 60, 0.25)' : 'none'
+              }}
+            >
+              <span>✨</span>
+              <span>{language === 'ta' ? 'ஆன் (ON)' : 'Animations ON'}</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => setAnimationMode('none')}
+              style={{
+                padding: '6px 14px',
+                borderRadius: '20px',
+                border: 'none',
+                background: animationMode === 'none' ? '#dc2626' : 'transparent',
+                color: animationMode === 'none' ? '#ffffff' : '#64748b',
+                fontWeight: 700,
+                fontSize: '0.82rem',
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '6px',
+                transition: 'all 0.2s ease',
+                boxShadow: animationMode === 'none' ? '0 2px 8px rgba(220, 38, 38, 0.25)' : 'none'
+              }}
+            >
+              <span>⛔</span>
+              <span>{language === 'ta' ? 'ஆஃப் (OFF)' : 'Animations OFF'}</span>
+            </button>
+          </div>
+        </div>
+
+        {/* Current Status Banner */}
+        <div style={{
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          padding: '10px 16px',
+          borderRadius: '12px',
+          background: animationMode === 'none' ? '#fef2f2' : animationMode === 'subtle' ? '#fffbeb' : '#fff1f2',
+          border: animationMode === 'none' ? '1px solid #fecaca' : animationMode === 'subtle' ? '1px solid #fde68a' : '1px solid #fecdd3',
+          marginBottom: '16px'
+        }}>
+          <span style={{ fontSize: '0.86rem', color: animationMode === 'none' ? '#991b1b' : animationMode === 'subtle' ? '#92400e' : '#9f1239', fontWeight: 600 }}>
+            {animationMode === 'none'
+              ? (language === 'ta' ? 'தற்போது நிலை: அனிமேஷன்கள் முற்றிலும் அணைக்கப்பட்டுள்ளன (Zero Motion).' : 'Current Status: Animations are fully turned OFF (Zero Motion).')
+              : animationMode === 'subtle'
+              ? (language === 'ta' ? 'தற்போது நிலை: மிதமான அனிமேஷன் இயக்கத்தில் உள்ளது.' : 'Current Status: Subtle Gentle Motion is active.')
+              : (language === 'ta' ? 'தற்போது நிலை: முழு மலர் இதழ்கள் மற்றும் வசீகர அனிமேஷன் இயக்கத்தில் உள்ளது.' : 'Current Status: Full Blossom Animations & Motion are active.')}
+          </span>
           <span style={{
-            fontSize: '0.8rem',
-            padding: '4px 12px',
+            fontSize: '0.78rem',
+            padding: '3px 10px',
             borderRadius: '12px',
-            background: animationMode === 'none' ? '#fee2e2' : animationMode === 'subtle' ? '#fef3c7' : '#ecfdf5',
-            color: animationMode === 'none' ? '#dc2626' : animationMode === 'subtle' ? '#b45309' : '#059669',
+            background: animationMode === 'none' ? '#dc2626' : animationMode === 'subtle' ? '#d97706' : '#be123c',
+            color: '#ffffff',
             fontWeight: 700
           }}>
-            {animationMode === 'none'
-              ? (language === 'ta' ? '⛔ அனிமேஷன் அணைக்கப்பட்டது (None)' : '⛔ Animations Disabled (None)')
-              : animationMode === 'subtle'
-              ? (language === 'ta' ? '🌿 மிதமான அனிமேஷன் (Subtle)' : '🌿 Subtle Motion')
-              : (language === 'ta' ? '🌸 முழு மலர் இதழ்கள் & அனிமேஷன் (Rich)' : '🌸 Full Blossom Animations (Rich)')}
+            {animationMode === 'none' ? 'STATUS: OFF' : 'STATUS: ON'}
           </span>
         </div>
 
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '14px', marginTop: '14px' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '14px' }}>
           {/* NONE Option */}
           <button
             type="button"
@@ -743,7 +807,7 @@ Daily Steps: 7,420 steps (Cadence: 104 spm)`;
           >
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '6px' }}>
               <strong style={{ color: animationMode === 'none' ? '#dc2626' : 'var(--text-primary)', fontSize: '0.96rem' }}>
-                ⛔ {language === 'ta' ? 'None (அனிமேஷன் வேண்டாம்)' : 'None (Zero Animations)'}
+                ⛔ {language === 'ta' ? 'None (அனிமேஷன் நிறுத்து)' : 'None (Animations OFF)'}
               </strong>
               {animationMode === 'none' && <Check size={18} color="#dc2626" />}
             </div>
@@ -770,7 +834,7 @@ Daily Steps: 7,420 steps (Cadence: 104 spm)`;
           >
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '6px' }}>
               <strong style={{ color: animationMode === 'subtle' ? '#b45309' : 'var(--text-primary)', fontSize: '0.96rem' }}>
-                🌿 {language === 'ta' ? 'Subtle (மிதமான அனிமேஷன்)' : 'Subtle Motion'}
+                🌿 {language === 'ta' ? 'Subtle (மிதமான அனிமேஷன்)' : 'Subtle Motion (ON)'}
               </strong>
               {animationMode === 'subtle' && <Check size={18} color="#f59e0b" />}
             </div>
@@ -797,7 +861,7 @@ Daily Steps: 7,420 steps (Cadence: 104 spm)`;
           >
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '6px' }}>
               <strong style={{ color: animationMode === 'rich' ? 'var(--pink-700)' : 'var(--text-primary)', fontSize: '0.96rem' }}>
-                🌸 {language === 'ta' ? 'Rich (முழு மலர் இதழ்கள்)' : 'Rich Blossom & Motion'}
+                🌸 {language === 'ta' ? 'Rich (முழு மலர் இதழ்கள்)' : 'Rich Blossoms (ON)'}
               </strong>
               {animationMode === 'rich' && <Check size={18} color="var(--rose-primary)" />}
             </div>

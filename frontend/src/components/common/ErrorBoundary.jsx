@@ -62,10 +62,10 @@ export default class ErrorBoundary extends React.Component {
             </div>
 
             <h2 style={{ fontSize: '1.4rem', fontWeight: 900, color: '#881337', margin: '0 0 10px 0' }}>
-              ஏதோ பிழை ஏற்பட்டது (An Error Occurred)
+              Something Went Wrong
             </h2>
             <p style={{ fontSize: '0.92rem', color: '#64748b', lineHeight: 1.5, marginBottom: '24px' }}>
-              பயன்பாட்டை மீண்டும் துவங்க கீழே உள்ள பொத்தானை அழுத்தவும். உங்கள் தரவுகள் பாதுகாப்பாக உள்ளன.
+              Click the button below to reload the application. Your health records and settings are safe.
             </p>
 
             <button
@@ -87,7 +87,7 @@ export default class ErrorBoundary extends React.Component {
               }}
             >
               <RefreshCw size={18} />
-              <span>மீண்டும் தொடங்கு (Reload FemTech)</span>
+              <span>Reload FemTech</span>
             </button>
           </div>
         </div>

@@ -16,7 +16,7 @@ const DEFAULT_USER = {
     phone: '+91 7200853683',
     relation: 'Mother'
   },
-  preferredLanguage: 'ta',
+  preferredLanguage: 'en',
   role: 'admin'
 };
 

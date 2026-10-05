@@ -1158,7 +1158,11 @@ export default function CycleTracker({ initialMode = 'regular' }) {
                     fontWeight: 800,
                     fontSize: '0.76rem'
                   }}>
-                    {currentFlow === 'heavy' ? '💧💧💧 அதிகம் (Heavy)' : currentFlow === 'medium' ? '💧💧 நடுத்தரம் (Normal)' : '💧 குறைவு (Light)'}
+                    {currentFlow === 'heavy'
+                      ? (language === 'ta' ? '💧💧💧 அதிகம் (Heavy)' : '💧💧💧 Heavy Flow')
+                      : currentFlow === 'medium'
+                      ? (language === 'ta' ? '💧💧 நடுத்தரம் (Normal)' : '💧💧 Normal Flow')
+                      : (language === 'ta' ? '💧 குறைவு (Light)' : '💧 Light Flow')}
                   </span>
                 </td>
                 <td style={{ padding: '12px 14px', fontWeight: 700, color: '#0f172a' }}>

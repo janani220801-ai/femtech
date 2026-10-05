@@ -125,7 +125,7 @@ export default function SplashScreen({ onFinish }) {
           cursor: 'pointer'
         }}
       >
-        <span>உள்ளே செல் (Enter FemTech)</span>
+        <span>Enter FemTech</span>
         <ArrowRight size={20} />
       </button>
 

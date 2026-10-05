@@ -66,13 +66,11 @@ export default function App() {
     };
 
     window.addEventListener('femtech_open_phone_modal', handleOpenPhone);
-    window.addEventListener('femtech_open_whisper_modal', handleOpenWhisper);
     window.addEventListener('femtech_celebrate', handleCelebrate);
     window.addEventListener('femtech_user_authenticated', handleUserAuth);
 
     return () => {
       window.removeEventListener('femtech_open_phone_modal', handleOpenPhone);
-      window.removeEventListener('femtech_open_whisper_modal', handleOpenWhisper);
       window.removeEventListener('femtech_celebrate', handleCelebrate);
       window.removeEventListener('femtech_user_authenticated', handleUserAuth);
     };
@@ -166,7 +164,6 @@ export default function App() {
         onOpenEmergency={() => setShowEmergencyModal(true)}
         onOpenNotifications={() => setShowNotificationFeed(true)}
         onOpenPhone={() => setShowPhoneModal(true)}
-        onOpenWhisper={() => setShowWhisperModal(true)}
         onNavigate={setCurrentTab}
       />
 

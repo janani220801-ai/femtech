@@ -14,10 +14,6 @@ export default function AmbientPetalsCanvas() {
   const animationMode = themeContext?.animationMode || 'rich';
   const enabled = animationMode !== 'none';
 
-  if (!enabled) {
-    return null;
-  }
-
   useEffect(() => {
     if (!enabled) return;
     const canvas = canvasRef.current;

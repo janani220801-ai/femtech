@@ -23,7 +23,7 @@ import {
   X
 } from 'lucide-react';
 
-export default function Navbar({ onOpenEmergency, onNavigate, onOpenNotifications, onOpenPhone, onOpenWhisper }) {
+export default function Navbar({ onOpenEmergency, onNavigate, onOpenNotifications, onOpenPhone }) {
   const { user, logout } = useAuth();
   const { language, changeLanguage, t, languages } = useLanguage();
   const { largeText, toggleLargeText, profileAvatar } = useTheme();
@@ -154,12 +154,12 @@ export default function Navbar({ onOpenEmergency, onNavigate, onOpenNotification
             }}
           >
             <Eye size={14} />
-            <span>{language === 'ta' ? '👤 பயனர் பார்வை' : '👤 User View'}</span>
+            <span>{language === 'ta' ? 'பயனர் பார்வை' : 'User View'}</span>
           </button>
 
           <button
             onClick={requestAdminMode}
-            title={language === 'ta' ? 'அட்மினிஸ்ட்ரேட்டர் பார்வைக்கு மாறுக (கடவுச்சொல் தேவை)' : 'Switch to Administrator Console (Password Protected)'}
+            title={language === 'ta' ? 'அட்மின் பார்வைக்கு மாறுக' : 'Switch to Administrator Console (Password Protected)'}
             style={{
               display: 'flex',
               alignItems: 'center',
@@ -177,7 +177,7 @@ export default function Navbar({ onOpenEmergency, onNavigate, onOpenNotification
             }}
           >
             <Shield size={14} />
-            <span>{language === 'ta' ? '🛡️ அட்மினிஸ்ட்ரேட்டர்' : '🛡️ Admin View'}</span>
+            <span>{language === 'ta' ? 'அட்மின் பார்வை' : 'Admin View'}</span>
           </button>
         </div>
 
