@@ -181,56 +181,6 @@ export default function Navbar({ onOpenEmergency, onNavigate, onOpenNotification
           </button>
         </div>
 
-        {/* Quick Call Mother Button */}
-        <a
-          href={`tel:${(motherPhone || user?.emergencyContact?.phone || '+919840165432').replace(/[^0-9+]/g, '')}`}
-          style={{
-            background: 'linear-gradient(135deg, #ec4899 0%, #db2777 100%)',
-            color: 'white',
-            border: 'none',
-            padding: '7px 14px',
-            borderRadius: 'var(--radius-full)',
-            fontSize: '0.82rem',
-            fontWeight: 800,
-            cursor: 'pointer',
-            display: 'flex',
-            alignItems: 'center',
-            gap: '6px',
-            textDecoration: 'none',
-            boxShadow: '0 4px 12px rgba(219, 39, 119, 0.35)'
-          }}
-          title={language === 'ta' ? `அம்மாவுக்கு உடனே அழை (${motherPhone || '+91 98401 65432'})` : `Call Mother (${motherPhone || '+91 98401 65432'})`}
-        >
-          <span>👩‍👧</span>
-          <span>{language === 'ta' ? 'அம்மாவை அழை' : 'Call Mom'}</span>
-        </a>
-
-        {/* Confidential Anonymous Whisper Trigger Button */}
-        <button
-          onClick={() => {
-            if (onOpenWhisper) onOpenWhisper();
-            else window.dispatchEvent(new CustomEvent('femtech_open_whisper_modal'));
-          }}
-          title={language === 'ta' ? 'ரகசிய செய்தி & ஆலோசனை (100% Anonymous Whisper)' : 'Send Confidential Whisper (100% Anonymous)'}
-          style={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: '6px',
-            padding: '7px 15px',
-            borderRadius: 'var(--radius-full)',
-            border: '1.5px solid #fda4af',
-            background: '#fff1f2',
-            color: '#be123c',
-            fontWeight: 700,
-            fontSize: '0.82rem',
-            cursor: 'pointer',
-            transition: 'all 0.15s ease'
-          }}
-        >
-          <span style={{ fontSize: '0.95rem' }}>🤫</span>
-          <span>{language === 'ta' ? 'ரகசிய செய்தி' : 'Whisper'}</span>
-        </button>
-
         {/* Emergency SOS Button */}
         <button
           onClick={onOpenEmergency}

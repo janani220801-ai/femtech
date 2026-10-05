@@ -15,11 +15,6 @@ export default function AdminAuthModal() {
 
   const isTamil = language === 'ta';
 
-  const handleAutofill = () => {
-    setEmail('janani22_janani220801');
-    setPassword('janani2222 jwa2217');
-  };
-
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
@@ -32,9 +27,9 @@ export default function AdminAuthModal() {
       style={{
         position: 'fixed',
         inset: 0,
-        backgroundColor: 'rgba(15, 23, 42, 0.75)',
-        backdropFilter: 'blur(8px)',
-        zIndex: 9999,
+        backgroundColor: 'rgba(15, 23, 42, 0.85)',
+        backdropFilter: 'blur(10px)',
+        zIndex: 99999,
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
@@ -47,11 +42,11 @@ export default function AdminAuthModal() {
           background: 'linear-gradient(135deg, #18181b 0%, #09090b 100%)',
           color: 'white',
           borderRadius: '24px',
-          border: '1.5px solid #f43f5e',
+          border: '2px solid #f43f5e',
           maxWidth: '460px',
           width: '100%',
-          padding: '30px',
-          boxShadow: '0 25px 50px -12px rgba(244, 63, 94, 0.35)',
+          padding: '32px',
+          boxShadow: '0 25px 60px -12px rgba(244, 63, 94, 0.45)',
           position: 'relative'
         }}
       >
@@ -81,68 +76,49 @@ export default function AdminAuthModal() {
         <div style={{ textAlign: 'center', marginBottom: '22px' }}>
           <div
             style={{
-              width: '56px',
-              height: '56px',
-              borderRadius: '18px',
+              width: '60px',
+              height: '60px',
+              borderRadius: '20px',
               background: 'linear-gradient(135deg, #f43f5e 0%, #be123c 100%)',
               display: 'inline-flex',
               alignItems: 'center',
               justifyContent: 'center',
-              fontSize: '1.8rem',
+              fontSize: '2rem',
               marginBottom: '12px',
-              boxShadow: '0 8px 20px rgba(244, 63, 94, 0.4)'
+              boxShadow: '0 8px 24px rgba(244, 63, 94, 0.45)'
             }}
           >
             🛡️
           </div>
-          <h2 style={{ fontSize: '1.45rem', fontWeight: 800, margin: '0 0 6px 0', color: '#ffffff' }}>
-            {isTamil ? 'அட்மினிஸ்ட்ரேட்டர் உள்நுழைவு' : 'Administrator Security Gate'}
+          <h2 style={{ fontSize: '1.4rem', fontWeight: 800, margin: '0 0 6px 0', color: '#ffffff' }}>
+            {isTamil ? 'தலைமை நிர்வாகி Janani பிரத்யேக பாதுகாப்பு கதவு' : 'Janani Chief Admin Gate'}
           </h2>
-          <p style={{ fontSize: '0.84rem', color: '#a1a1aa', margin: 0 }}>
+          <p style={{ fontSize: '0.84rem', color: '#a1a1aa', margin: 0, lineHeight: '1.5' }}>
             {isTamil
-              ? 'பயனர்களின் செயல்பாடுகள் மற்றும் தகவல்களைக் கண்காணிக்க அட்மின் ஐடி மற்றும் பாஸ்வேர்டு உள்ளிடவும்.'
-              : 'Enter Administrator Login ID and Password to inspect registered users and system updates.'}
+              ? 'இந்த அட்மினிஸ்ட்ரேட்டர் பகுதி Janani அவர்களுக்கு மட்டுமே 100% பிரத்யேகமாக பூட்டப்பட்டுள்ளது. அனுமதி பெற்ற அட்மின் சான்றுகளை உள்ளிடவும்.'
+              : 'Strictly restricted to Janani. Unauthorized access is strictly prohibited and audited.'}
           </p>
         </div>
 
-        {/* Credentials Reminder Box */}
+        {/* Exclusive Security Shield Banner */}
         <div
           style={{
             background: 'rgba(244, 63, 94, 0.1)',
             border: '1px solid rgba(244, 63, 94, 0.3)',
             borderRadius: '14px',
-            padding: '12px 16px',
-            marginBottom: '18px'
+            padding: '10px 14px',
+            marginBottom: '18px',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '10px'
           }}
         >
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
-            <span style={{ fontSize: '0.74rem', textTransform: 'uppercase', color: '#fb7185', fontWeight: 800 }}>
-              🔑 {isTamil ? 'அட்மின் விபரங்கள் (Default Credentials)' : 'Administrator Credentials'}
-            </span>
-            <button
-              type="button"
-              onClick={handleAutofill}
-              style={{
-                background: '#f43f5e',
-                color: 'white',
-                border: 'none',
-                padding: '3px 10px',
-                borderRadius: '8px',
-                fontSize: '0.72rem',
-                fontWeight: 700,
-                cursor: 'pointer',
-                display: 'inline-flex',
-                alignItems: 'center',
-                gap: '4px'
-              }}
-            >
-              <Sparkles size={12} />
-              <span>{isTamil ? 'தானாக நிரப்பு (Autofill)' : 'Autofill'}</span>
-            </button>
-          </div>
-          <div style={{ fontSize: '0.82rem', color: '#e4e4e7', fontFamily: 'monospace' }}>
-            ID: <strong style={{ color: '#fff' }}>janani22_janani220801</strong> &nbsp;|&nbsp; Pass: <strong style={{ color: '#fff' }}>janani2222 jwa2217</strong>
-          </div>
+          <Lock size={18} color="#f43f5e" />
+          <span style={{ fontSize: '0.78rem', color: '#fca5a5', lineHeight: '1.4' }}>
+            {isTamil
+              ? '🔒 அட்மினிஸ்ட்ரேட்டர் Janani தவிர வேறு எவராலும் இந்த தளத்தை திறக்க முடியாது. (Strict Authorization Barrier)'
+              : '🔒 256-Bit Cryptographic Barrier: Strictly impenetrable without Janani Master Credentials.'}
+          </span>
         </div>
 
         {/* Error message */}

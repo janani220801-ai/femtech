@@ -106,15 +106,7 @@ export default function Sidebar({ currentTab, onNavigate }) {
       items: [
         { id: 'nearby-care', label: t('nearbyCare') || 'Urgent Care Finder', icon: Hospital },
         { id: 'divas-meeting', label: language === 'ta' ? '🌸 திவாஸ் கம்யூனிட்டி மீட்டிங்' : "🌸 Diva's Community Meeting", icon: Users },
-        { id: 'ai-assistant', label: t('femtechAI') || 'FT Chatbox', icon: Bot, isHighlight: true },
-        {
-          id: 'anonymous-whisper',
-          label: language === 'ta' ? 'ரகசிய செய்தி (Whisper)' : 'Anonymous Whisper',
-          icon: EyeOff,
-          badge: 'Private',
-          isAction: true,
-          onClick: () => window.dispatchEvent(new CustomEvent('femtech_open_whisper_modal'))
-        }
+        { id: 'ai-assistant', label: t('femtechAI') || 'FT Chatbox', icon: Bot, isHighlight: true }
       ]
     },
     {

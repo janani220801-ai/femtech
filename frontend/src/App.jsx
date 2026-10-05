@@ -36,7 +36,6 @@ import DivasMeeting from './components/DivasMeeting/DivasMeeting';
 import AdminPortal from './components/AdminPortal/AdminPortal';
 import AdminAuthModal from './components/AdminPortal/AdminAuthModal';
 import AmbientPetalsCanvas from './components/common/AmbientPetalsCanvas';
-import AnonymousWhisperModal from './components/common/AnonymousWhisperModal';
 
 export default function App() {
   const { user, loading } = useAuth();
@@ -48,13 +47,11 @@ export default function App() {
   const [showEmergencyModal, setShowEmergencyModal] = useState(false);
   const [showNotificationFeed, setShowNotificationFeed] = useState(false);
   const [showPhoneModal, setShowPhoneModal] = useState(false);
-  const [showWhisperModal, setShowWhisperModal] = useState(false);
   const [showCelebration, setShowCelebration] = useState(false);
 
   // Listen for open phone modal event, celebration, and age-based auth routing
   React.useEffect(() => {
     const handleOpenPhone = () => setShowPhoneModal(true);
-    const handleOpenWhisper = () => setShowWhisperModal(true);
     const handleCelebrate = () => {
       setShowCelebration(false);
       setTimeout(() => setShowCelebration(true), 50);
@@ -208,12 +205,6 @@ export default function App() {
       <PhoneLinkModal
         isOpen={showPhoneModal}
         onClose={() => setShowPhoneModal(false)}
-      />
-
-      {/* 100% Confidential Anonymous Whisper Modal */}
-      <AnonymousWhisperModal
-        isOpen={showWhisperModal}
-        onClose={() => setShowWhisperModal(false)}
       />
 
       {/* Confetti Party Popper Celebration Burst */}

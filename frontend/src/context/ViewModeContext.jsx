@@ -4,12 +4,14 @@ import { api } from '../services/api';
 const ViewModeContext = createContext(null);
 
 export const ViewModeProvider = ({ children }) => {
-  const [viewMode, setViewMode] = useState(() => {
-    return localStorage.getItem('femtech_global_view_mode') || 'user';
-  });
-
   const [isAdminAuthenticated, setIsAdminAuthenticated] = useState(() => {
     return localStorage.getItem('femtech_admin_authenticated') === 'true';
+  });
+
+  const [viewMode, setViewMode] = useState(() => {
+    const isAuthed = localStorage.getItem('femtech_admin_authenticated') === 'true';
+    const saved = localStorage.getItem('femtech_global_view_mode');
+    return (saved === 'admin' && isAuthed) ? 'admin' : 'user';
   });
 
   const [showAdminAuthModal, setShowAdminAuthModal] = useState(false);
@@ -23,7 +25,7 @@ export const ViewModeProvider = ({ children }) => {
     localStorage.setItem('femtech_admin_authenticated', String(isAdminAuthenticated));
   }, [isAdminAuthenticated]);
 
-  // Request to switch to Admin mode - gates through Auth if not authenticated
+  // Request to switch to Admin mode - strictly gates through Auth if not authenticated
   const requestAdminMode = () => {
     if (isAdminAuthenticated) {
       setViewMode('admin');
@@ -33,7 +35,7 @@ export const ViewModeProvider = ({ children }) => {
     }
   };
 
-  // Perform Admin Login with ID & Password
+  // Perform Admin Login with ID & Password - strictly reserved for Janani
   const adminLogin = async (email, password) => {
     setAdminAuthError('');
     try {
@@ -66,8 +68,8 @@ export const ViewModeProvider = ({ children }) => {
         setShowAdminAuthModal(false);
         return { success: true };
       }
-      setAdminAuthError(err.message || 'தவறான அட்மின் ஐடி அல்லது கடவுச்சொல். அட்மினிஸ்ட்ரேட்டர் Janani மட்டுமே உள்நுழைய முடியும். (Access strictly restricted to Janani).');
-      return { success: false, message: err.message };
+      setAdminAuthError('தவறான அட்மின் ஐடி அல்லது கடவுச்சொல். தலைமை நிர்வாகி Janani மட்டுமே உள்நுழைய முடியும். வேறு எவருக்கும் அனுமதியில்லை. (Access strictly restricted to Janani only).');
+      return { success: false, message: 'Access denied' };
     }
   };
 
@@ -76,15 +78,17 @@ export const ViewModeProvider = ({ children }) => {
     setIsAdminAuthenticated(false);
     setViewMode('user');
     localStorage.removeItem('femtech_admin_authenticated');
+    localStorage.setItem('femtech_global_view_mode', 'user');
   };
 
   // Direct switch to user view
   const switchToUser = () => {
     setViewMode('user');
+    localStorage.setItem('femtech_global_view_mode', 'user');
   };
 
   const toggleViewMode = () => {
-    if (viewMode === 'admin') {
+    if (viewMode === 'admin' && isAdminAuthenticated) {
       switchToUser();
     } else {
       requestAdminMode();
@@ -94,10 +98,10 @@ export const ViewModeProvider = ({ children }) => {
   return (
     <ViewModeContext.Provider
       value={{
-        viewMode,
+        viewMode: isAdminAuthenticated && viewMode === 'admin' ? 'admin' : 'user',
         setViewMode,
-        isAdmin: viewMode === 'admin',
-        isUser: viewMode === 'user',
+        isAdmin: isAdminAuthenticated && viewMode === 'admin',
+        isUser: !(isAdminAuthenticated && viewMode === 'admin'),
         isAdminAuthenticated,
         showAdminAuthModal,
         adminAuthError,
